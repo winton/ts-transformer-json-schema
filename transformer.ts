@@ -21,7 +21,12 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
   }
   const type = typeChecker.getTypeFromTypeNode(node.typeArguments[0]);
   const properties = typeChecker.getPropertiesOfType(type);
-  return ts.createArrayLiteral(properties.map(property => ts.createLiteral(property.name)));
+  
+  return ts.createObjectLiteral(properties.map(function (property) {
+    const type = typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(property, property.declarations[0]));
+    // TODO: format types
+    return ts.createPropertyAssignment(property.name, ts.createLiteral(type));
+  }));
 }
 
 const indexTs = path.join(__dirname, 'index.ts');
