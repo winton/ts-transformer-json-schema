@@ -1,4 +1,4 @@
-# ts-transformer-keys
+# ts-transformer-json-schema
 A TypeScript custom transformer which enables to obtain keys of given type.
 
 [![Build Status][travis-image]][travis-url]
@@ -32,56 +32,6 @@ console.log(keysOfProps); // ['id', 'name', 'age']
 
 Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (See https://github.com/Microsoft/TypeScript/issues/14419).
 The followings are the example usage of the custom transformer.
-
-### webpack (with ts-loader or awesome-typescript-loader)
-
-See [examples/webpack](examples/webpack) for detail.
-
-```js
-// webpack.config.js
-const keysTransformer = require('ts-transformer-keys/transformer').default;
-
-module.exports = {
-  // ...
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        loader: 'ts-loader', // or 'awesome-typescript-loader'
-        options: {
-          getCustomTransformers: program => ({
-              before: [
-                  keysTransformer(program)
-              ]
-          })
-        }
-      }
-    ]
-  }
-};
-
-```
-
-### Rollup (with rollup-plugin-typescript2)
-
-See [examples/rollup](examples/rollup) for detail.
-
-```js
-// rollup.config.js
-import typescript from 'rollup-plugin-typescript2';
-import keysTransformer from 'ts-transformer-keys/transformer';
-
-export default {
-  // ...
-  plugins: [
-    typescript({ transformers: [service => ({
-      before: [ keysTransformer(service.getProgram()) ],
-      after: []
-    })] })
-  ]
-};
-
-```
 
 ### ttypescript
 
