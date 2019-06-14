@@ -56,10 +56,9 @@ const GreeterService: ServiceSchema = {
     // ...
 		welcome: {
 			params: schema<IUser>(),
-			handler(ctx) {
-				const user = ctx.params as IUser;
-				return `Welcome, ${user.name}`;
-			},
+			handler({ params }: Context<IUser>) {
+				return `Welcome, ${params.name}`;
+			}
     },
     // ...
 	},
