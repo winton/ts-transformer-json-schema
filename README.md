@@ -3,7 +3,7 @@ A TypeScript custom transformer to obtain JSON schema of interface
 
 [![Build Status][travis-image]][travis-url]
 [![NPM version][npm-image]][npm-url]
-[![Downloads](https://img.shields.io/npm/dm/ts-transformer-keys.svg)](https://www.npmjs.com/package/ts-transformer-json-schema)
+[![Downloads](https://img.shields.io/npm/dm/ts-transformer-json-schema.svg)](https://www.npmjs.com/package/ts-transformer-json-schema)
 
 # Requirement
 TypeScript >= 2.4.1
