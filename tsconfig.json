@@ -9,9 +9,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "index.ts",
-    "transformer.ts",
-    "test/json-schema.spec.ts"
+    "index.ts"
   ],
   "exclude": [
     "node_modules"
