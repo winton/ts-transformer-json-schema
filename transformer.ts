@@ -23,8 +23,12 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
   const properties = typeChecker.getPropertiesOfType(type).filter( property => property.declarations!.length);
 
   const propertiesLiterals = properties.map(function (property) {
-    const type = typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(property, property.declarations![0]));
-    // TODO: format types
+    let type = typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(property, property.declarations![0]));
+
+    if(type.includes("[]")){
+      type = 'array';
+    }
+
     return ts.createPropertyAssignment(property.name, ts.createLiteral(type));
   })
   
