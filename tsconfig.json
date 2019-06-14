@@ -1,17 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "module": "commonjs",
     "strict": true,
     "suppressImplicitAnyIndexErrors": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "plugins": [
+      { "transform": "./transformer" }
+    ]
   },
   "include": [
     "index.ts",
     "transformer.ts",
-    "test/compile/compile.ts"
+    "test/json-schema.spec.ts"
   ],
   "exclude": [
     "node_modules"

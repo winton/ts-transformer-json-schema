@@ -4,7 +4,9 @@
   "description": "A TypeScript custom transformer which enables to obtain keys of given type.",
   "main": "index.js",
   "scripts": {
-    "test": "tsc && node test/compile && mocha test"
+    "build": "ttsc",
+    "test": "ttsc && jest --coverage",
+    "test-init": "jest --init"
   },
   "repository": {
     "type": "git",
@@ -26,10 +28,13 @@
   ],
   "homepage": "https://github.com/kimamula/ts-transformer-keys#readme",
   "devDependencies": {
-    "@types/mocha": "^5.2.3",
+    "@types/jest": "^24.0.14",
     "@types/node": "^10.3.5",
-    "mocha": "^5.2.0",
-    "typescript": "^2.9.2"
+    "jest": "^24.8.0",
+    "jest-cli": "^24.8.0",
+    "tslint": "^5.17.0",
+    "ttypescript": "^1.5.7",
+    "typescript": "^3.2.2"
   },
   "peerDependencies": {
     "typescript": ">=2.4.1"
