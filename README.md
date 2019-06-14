@@ -43,11 +43,6 @@ In order to start using it with Moleculer you have to change compiler to Ttypesc
 You need to change it for build, ts-node and jest.
 But first follow the guide how to use the custom transformer with ttypescript.
 
-## How to use the custom transformer
-
-Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (See https://github.com/Microsoft/TypeScript/issues/14419).
-The followings are the example usage of the custom transformer.
-
 ```ts
 import { schema } from 'ts-transformer-json-schema';
 
@@ -70,8 +65,12 @@ const GreeterService: ServiceSchema = {
 	},
   // ...
 }
-
 ```
+
+## How to use the custom transformer
+
+Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (See https://github.com/Microsoft/TypeScript/issues/14419).
+The followings are the example usage of the custom transformer.
 
 ### ttypescript
 
