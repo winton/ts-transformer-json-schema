@@ -51,17 +51,13 @@ interface IUser {
 }
 
 const GreeterService: ServiceSchema = {
-	// ...
-	actions: {
-    // ...
-		welcome: {
-			params: schema<IUser>(),
-			handler({ params }: Context<IUser>) {
-				return `Welcome, ${params.name}`;
-			}
-    },
-    // ...
-	},
+  // ...
+	welcome: {
+		params: schema<IUser>(),
+		handler({ params }: Context<IUser>) {
+			return `Welcome, ${params.name}`;
+    }
+  }
   // ...
 }
 ```
