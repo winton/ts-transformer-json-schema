@@ -1,31 +1,27 @@
 "use strict";
 
-import { keys } from '../index';
+import { schema } from '../index';
 
 describe("Test json schema tranformer", () => {
 
 	describe("Basic test", () => {
 
-		it("Testing without interface", () => {
-			expect(keys()).toStrictEqual({});
+		it("Without interface", () => {
+			expect(schema()).toStrictEqual({});
 		});
 
-		it("Testing empty interface", () => {
+		it("Empty interface", () => {
 			interface IEmpty{}
 
-			expect(keys<IEmpty>()).toStrictEqual({});
+			expect(schema<IEmpty>()).toStrictEqual({});
 		});
 
-		it("Testing interface with string", () => {
+		it("Interface with string", () => {
 			interface IString{
 				name: string;
 			}
 
-			expect(keys<IString>()).toStrictEqual({ name: "string"});
-		});
-
-		it("Without type, it should be converted to empty object!", () => {
-			expect(keys()).toStrictEqual({});
+			expect(schema<IString>()).toStrictEqual({ name: "string"});
 		});
 
 	});

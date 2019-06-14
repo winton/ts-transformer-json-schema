@@ -1,1 +1,1 @@
-export declare function keys<T extends object>(): any;
+export declare function schema<T extends object>(): any;

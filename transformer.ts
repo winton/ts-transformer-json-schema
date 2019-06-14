@@ -45,5 +45,5 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
     && !ts.isJSDocSignature(declaration)
     && (path.join(declaration.getSourceFile().fileName) === indexTs)
     && !!declaration.name
-    && declaration.name.getText() === 'keys';
+    && declaration.name.getText() === 'schema';
 }
