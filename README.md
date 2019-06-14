@@ -1,5 +1,5 @@
 # ts-transformer-json-schema
-A TypeScript custom transformer which enables to obtain keys of given type.
+A TypeScript custom transformer to obtain JSON schema of interface
 
 [![Build Status][travis-image]][travis-url]
 [![NPM version][npm-image]][npm-url]
