@@ -3,29 +3,34 @@ A TypeScript custom transformer to obtain JSON schema of interface
 
 [![Build Status][travis-image]][travis-url]
 [![NPM version][npm-image]][npm-url]
-[![Downloads](https://img.shields.io/npm/dm/ts-transformer-keys.svg)](https://www.npmjs.com/package/ts-transformer-keys)
+[![Downloads](https://img.shields.io/npm/dm/ts-transformer-keys.svg)](https://www.npmjs.com/package/ts-transformer-json-schema)
 
 # Requirement
 TypeScript >= 2.4.1
 
-# How to use this package
+# What is this package
 
-This package exports 2 functions.
-One is `keys` which is used in TypeScript codes to obtain keys of given type, while the other is a TypeScript custom transformer which is used to compile the `keys` function correctly.
+This package is custom ts transformer which compiles TS Interface to json schema.
+Main intention for this package is to facilitate usage of TS Intefraces for [Moleculer validator](https://moleculer.services/docs/0.13/validating.html).
+
+Moleculer validator uses [fast-validator](https://github.com/icebob/fastest-validator)
 
 ## How to use `keys`
 
 ```ts
-import { keys } from 'ts-transformer-keys';
+import { schema } from 'ts-transformer-keys';
 
-interface Props {
-  id: string;
-  name: string;
-  age: number;
+interface IExample {
+  str: string;
+  num: number;
+  bool: boolean;
+  obj: any;
+  array: number[];
+  array2: Array<number>
 }
-const keysOfProps = keys<Props>();
+const IExample_schema = schema<Props>();
 
-console.log(keysOfProps); // ['id', 'name', 'age']
+console.log(IExample_schema); // { str: "string", num: "number" ... }
 ```
 
 ## How to use the custom transformer
@@ -44,7 +49,7 @@ See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/READ
   "compilerOptions": {
     // ...
     "plugins": [
-      { "transform": "ts-transformer-keys/transformer" }
+      { "transform": "ts-transformer-json-schema/transformer" }
     ]
   },
   // ...
@@ -56,49 +61,10 @@ See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/READ
 See [test](test) for detail.
 You can try it with `$ npm test`.
 
-```js
-const ts = require('typescript');
-const keysTransformer = require('ts-transformer-keys/transformer').default;
-
-const program = ts.createProgram([/* your files to compile */], {
-  strict: true,
-  noEmitOnError: true,
-  target: ts.ScriptTarget.ES5
-});
-
-const transformers = {
-  before: [keysTransformer(program)],
-  after: []
-};
-const { emitSkipped, diagnostics } = program.emit(undefined, undefined, undefined, false, transformers);
-
-if (emitSkipped) {
-  throw new Error(diagnostics.map(diagnostic => diagnostic.messageText).join('\n'));
-}
-```
-
-As a result, the TypeScript code shown [here](#how-to-use-keys) is compiled into the following JavaScript.
-
-```js
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var ts_transformer_keys_1 = require("ts-transformer-keys");
-var keysOfProps = ["id", "name", "age"];
-console.log(keysOfProps); // ['id', 'name', 'age']
-```
-
 # Note
 
-* The `keys` function can only be used as a call expression. Writing something like `keys.toString()` results in a runtime error.
-* `keys` does not work with a dynamic type parameter, i.e., `keys<T>()` in the following code is converted to an empty array(`[]`).
-
-```ts
-class MyClass<T extends object> {
-  keys() {
-    return keys<T>();
-  }
-}
-```
+* The `schema` function can only be used as a call expression. Writing something like `schema.toString()` results in a runtime error.
+* `schema` does not work with a dynamic type parameter, i.e., `schema<T>()` in the following code is converted to an empty object(`{}`).
 
 # License
 
