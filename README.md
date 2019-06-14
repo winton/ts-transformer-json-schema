@@ -15,10 +15,14 @@ Main intention for this package is to facilitate usage of TS Intefraces for [Mol
 
 Moleculer validator uses [fast-validator](https://github.com/icebob/fastest-validator)
 
-## How to use `keys`
+## How to use Json-schema
+
+```
+$ npm install ts-transformer-json-schema --save
+```
 
 ```ts
-import { schema } from 'ts-transformer-keys';
+import { schema } from 'ts-transformer-json-schema';
 
 interface IExample {
   str: string;
@@ -33,10 +37,41 @@ const IExample_schema = schema<Props>();
 console.log(IExample_schema); // { str: "string", num: "number" ... }
 ```
 
+## How to use with Moleculer
+
+In order to start using it with Moleculer you have to change compiler to Ttypescript.
+You need to change it for build, ts-node and jest.
+But first follow the guide how to use the custom transformer with ttypescript.
+
 ## How to use the custom transformer
 
 Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (See https://github.com/Microsoft/TypeScript/issues/14419).
 The followings are the example usage of the custom transformer.
+
+```ts
+import { schema } from 'ts-transformer-json-schema';
+
+interface IUser {
+	name: string;
+}
+
+const GreeterService: ServiceSchema = {
+	// ...
+	actions: {
+    // ...
+		welcome: {
+			params: schema<IUser>(),
+			handler(ctx) {
+        const user = ctx.params as IUser;
+				return `Welcome, ${user.name}`;
+			},
+    },
+    // ...
+	},
+  // ...
+}
+
+```
 
 ### ttypescript
 
