@@ -70,7 +70,7 @@ You can try it with `$ npm test`.
 
 MIT
 
-[travis-image]:https://travis-ci.org/kimamula/ts-transformer-keys.svg?branch=master
-[travis-url]:https://travis-ci.org/kimamula/ts-transformer-keys
-[npm-image]:https://img.shields.io/npm/v/ts-transformer-keys.svg?style=flat
-[npm-url]:https://npmjs.org/package/ts-transformer-keys
+[travis-image]:https://travis-ci.org/ipetrovic11/ts-transformer-json-schema.svg?branch=master
+[travis-url]:https://travis-ci.org/ipetrovic11/ts-transformer-json-schema
+[npm-image]:https://img.shields.io/npm/v/ts-transformer-json-schema.svg?style=flat
+[npm-url]:https://www.npmjs.com/package/ts-transformer-json-schema
