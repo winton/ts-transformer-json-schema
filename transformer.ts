@@ -1,14 +1,16 @@
-import * as ts from 'typescript';
-import * as path from 'path';
+import * as path from "path";
+import * as ts from "typescript";
 
 export default function transformer(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
   return (context: ts.TransformationContext) => (file: ts.SourceFile) => visitNodeAndChildren(file, program, context);
 }
 
+// tslint:disable-next-line:max-line-length
 function visitNodeAndChildren(node: ts.SourceFile, program: ts.Program, context: ts.TransformationContext): ts.SourceFile;
 function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node;
 function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node {
-  return ts.visitEachChild(visitNode(node, program), childNode => visitNodeAndChildren(childNode, program, context), context);
+  // tslint:disable-next-line:max-line-length
+  return ts.visitEachChild(visitNode(node, program), (childNode) => visitNodeAndChildren(childNode, program, context), context);
 }
 
 function visitNode(node: ts.Node, program: ts.Program): ts.Node {
@@ -20,28 +22,29 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
     return ts.createObjectLiteral();
   }
   const type = typeChecker.getTypeFromTypeNode(node.typeArguments[0]);
-  const properties = typeChecker.getPropertiesOfType(type).filter( property => property.declarations!.length);
+  const properties = typeChecker.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
-  const propertiesLiterals = properties.map(function (property) {
-    let type = typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(property, property.declarations![0]));
+  const propertiesLiterals = properties.map((property) => {
+    let property_type = typeChecker.typeToString(
+      typeChecker.getTypeOfSymbolAtLocation(property, property.declarations![0]));
 
-    if(type.includes("[]")){
-      type = 'array';
+    if (property_type.includes("[]")) {
+      property_type = "array";
     }
 
-    return ts.createPropertyAssignment(property.name, ts.createLiteral(type));
-  })
-  
+    return ts.createPropertyAssignment(property.name, ts.createLiteral(property_type));
+  });
+
   return ts.createObjectLiteral(propertiesLiterals);
 }
 
-const indexTs = path.join(__dirname, 'index.ts');
+const indexTs = path.join(__dirname, "index.ts");
 function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node is ts.CallExpression {
   if (!ts.isCallExpression(node)) {
     return false;
   }
   const signature = typeChecker.getResolvedSignature(node);
-  if (typeof signature === 'undefined') {
+  if (typeof signature === "undefined") {
     return false;
   }
   const { declaration } = signature;
@@ -49,5 +52,5 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
     && !ts.isJSDocSignature(declaration)
     && (path.join(declaration.getSourceFile().fileName) === indexTs)
     && !!declaration.name
-    && declaration.name.getText() === 'schema';
+    && declaration.name.getText() === "schema";
 }

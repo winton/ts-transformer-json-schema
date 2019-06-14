@@ -4,8 +4,8 @@
   "description": "A TypeScript custom transformer to obtain JSON schema from interface.",
   "main": "index.js",
   "scripts": {
-    "install": "tsc",
-    "test": "ttsc && jest --coverage"
+    "install": "ttsc",
+    "test": "ttsc --project tsconfig.test.json && jest --coverage"
   },
   "repository": {
     "type": "git",
