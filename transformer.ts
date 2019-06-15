@@ -65,12 +65,12 @@ function parseType(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressio
 
   if (flags === ts.TypeFlags.Object) {
     let objectType: ts.ObjectType = type as ts.ObjectType;
+
     if (objectType.objectFlags === ts.ObjectFlags.Interface) {
       return parseInterface(type, tc);
     }
 
     if (objectType.objectFlags === ts.ObjectFlags.Reference) {
-      let referenceType: ts.TypeReference = type as ts.TypeReference;
       return parseArray(type, tc);
     }
   }
@@ -117,9 +117,18 @@ function parseArray(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
 
 function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
   const union_type = type as ts.UnionOrIntersectionType;
-  const types = union_type.types.map( union_property => {
+  const types = union_type.types.filter(union_property => tc.typeToString(union_property) !== 'undefined')
+  .map( union_property => {
+    if(union_property.flags & ts.TypeFlags.BooleanLiteral){
+      return ts.createObjectLiteral([
+        ts.createPropertyAssignment("type", ts.createLiteral("boolean"))
+      ]);
+    }
+
     return parseType(union_property, tc);
   });
+
+  
 
   return ts.createArrayLiteral(types) as unknown as ts.ObjectLiteralExpression;
 }
@@ -142,8 +151,18 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpr
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
   const properties_assignments = properties.map( property => {
-    const parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc);
-    // TODO: Check if it is optional
+    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc);
+ 
+    const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
+    if(declaration.questionToken && parsed.properties){
+
+      const combined_properties: ts.ObjectLiteralElementLike[] = [];
+      parsed.properties.forEach( property => combined_properties.push(property));
+
+      combined_properties.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
+      parsed = ts.createObjectLiteral(combined_properties);
+    }
+
     return ts.createPropertyAssignment(property.name, parsed);
   })
 
