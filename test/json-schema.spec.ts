@@ -108,25 +108,67 @@ describe("Test json schema tranformer", () => {
 				]
 			});
 		});
+
+		it("Interface with string, number or boolean", () => {
+			interface IUnion {
+				optional: string | number | boolean ;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				optional: [
+					{ type: "string" }, 
+					{ type: "number" }, 
+					{ type: "boolean" },
+					{ type: "boolean" }
+				]
+			});
+		});
+
+		it("Interface with string or boolean", () => {
+			interface IUnion {
+				optional: string | boolean ;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				optional: [
+					{ type: "string" }, 
+					{ type: "boolean" },
+					{ type: "boolean" }
+				]
+			});
+		});
+
+		it("Interface with string or number[]", () => {
+			interface IUnion {
+				optional: string | number[] ;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				optional: [
+					{ type: "string" }, 
+					{ type: "array" }
+				]
+			});
+		});
 	});
 
 	describe("Intersection validator types tests", () => {
 
 		it("Interface with any or string", () => {
 
-			interface IUnionPart1 {
+			interface IIntersectionPart1 {
 				part1: string;
 			}
 
-			interface IUnionPart2 {
+			interface IIntersectionPart2 {
 				part2: number;
 			}
 
-			interface IUnion {
-				combined : IUnionPart1 & IUnionPart2;
+			interface IIntersection {
+				combined : IIntersectionPart1 & IIntersectionPart2;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({
+			expect(schema<IIntersection>()).toStrictEqual({
 				combined: {
 					part1: { type: "string" },
 					part2: { type: "number" }
@@ -290,6 +332,29 @@ describe("Test json schema tranformer", () => {
 			});
 		});
 
+	});
+
+	describe("Optional types tests", () => {
+
+		it("Optional property any", () => {
+			interface IOptional {
+				optional?: any;
+			}
+
+			expect(schema<IOptional>()).toStrictEqual({
+				optional: { type: "any", optional: true }
+			});
+		});
+
+		it("Optional property union", () => {
+			interface IOptional {
+				readonly optional?: string | number ;
+			}
+
+			expect(schema<IOptional>()).toStrictEqual({
+				optional: [{ type: "string" }, { type: "number" }]
+			});
+		});
 	});
 });
 
