@@ -11,77 +11,98 @@ describe("Test json schema tranformer", () => {
 		});
 
 		it("Empty interface", () => {
-			interface IEmpty{}
+			interface IEmpty { }
 
 			expect(schema<IEmpty>()).toStrictEqual({});
 		});
 
 		it("Interface with string", () => {
-			interface IString{
-				name: string;
+			interface IString {
+				str: string;
 			}
 
-			expect(schema<IString>()).toStrictEqual({ name: "string"});
+			expect(schema<IString>()).toStrictEqual({ str: { type: "string" } });
 		});
 
 		it("Interface with any", () => {
-			interface IAny{
-				target: any;
+			interface IAny {
+				any: any;
 			}
 
-			expect(schema<IAny>()).toStrictEqual({ target: "any"});
+			expect(schema<IAny>()).toStrictEqual({ any: { type: "any" } });
 		});
 
 		it("Interface with number", () => {
-			interface INumber{
-				target: number;
+			interface INumber {
+				num: number;
 			}
 
-			expect(schema<INumber>()).toStrictEqual({ target: "number"});
+			expect(schema<INumber>()).toStrictEqual({ num: { type: "number" } });
 		});
 
 		it("Interface with boolean", () => {
-			interface IBool{
-				target: boolean;
+			interface IBool {
+				bool: boolean;
 			}
 
-			expect(schema<IBool>()).toStrictEqual({ target: "boolean"});
-		});
-
-		it("Interface with numbers array", () => {
-			interface IArray{
-				target: number[];
-			}
-
-			expect(schema<IArray>()).toStrictEqual({ target: "array"});
-		});
-
-		it("Interface with strings array", () => {
-			interface IArray{
-				target: string[];
-			}
-
-			expect(schema<IArray>()).toStrictEqual({ target: "array"});
-		});
-
-		it("Interface with strings array using Array<T>", () => {
-			interface IArray{
-				target: Array<string>;
-			}
-
-			expect(schema<IArray>()).toStrictEqual({ target: "array"});
+			expect(schema<IBool>()).toStrictEqual({ bool: { type: "boolean" } });
 		});
 	});
 
-	describe("Multiple validator types tests", () => {
+	describe("Array type tests", () => {
 
-		it("Interface with any or string", () => {
-			interface IMultiple{
-				multiple: string | number;
+		it("Interface with numbers array", () => {
+			interface IArray {
+				num_array: number[];
 			}
 
-			expect(schema<IMultiple>()).toStrictEqual({
-				multiple: [
+			expect(schema<IArray>()).toStrictEqual({ num_array: { type: "array" } });
+		});
+
+		it("Interface with strings array", () => {
+			interface IArray {
+				str_array: string[];
+			}
+
+			expect(schema<IArray>()).toStrictEqual({ str_array: { type: "array" } });
+		});
+
+		it("Interface with strings array using Array<T>", () => {
+			interface IArray {
+				str_array: Array<string>;
+			}
+
+			expect(schema<IArray>()).toStrictEqual({ str_array: { type: "array" } });
+		});
+
+		it("Interface with strings array using Array<T>", () => {
+			interface IArrayMultipleTypes {
+				mul_array: Array<string | number>;
+			}
+
+			expect(schema<IArrayMultipleTypes>()).toStrictEqual({ mul_array: { type: "array" } });
+		});
+	});
+
+	describe("Union validator types tests", () => {
+
+		it("Interface with any or string", () => {
+			interface IUnion {
+				union: any | string;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				union: { type: "any" }
+			});
+		});
+
+		it("Interface with string or number", () => {
+			interface IUnion {
+				union: string | number;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				union: [
 					{ type: "string" },
 					{ type: "number" }
 				]
@@ -89,64 +110,119 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
-	describe("Enumerable validator types test", () => {
+	describe("Intersection validator types tests", () => {
 
 		it("Interface with any or string", () => {
+
+			interface IUnionPart1 {
+				part1: string;
+			}
+
+			interface IUnionPart2 {
+				part2: number;
+			}
+
+			interface IUnion {
+				combined : IUnionPart1 & IUnionPart2;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				combined: {
+					part1: { type: "string" },
+					part2: { type: "number" }
+				}
+			});
+		});
+	});
+
+	describe("Enumerable validator types test", () => {
+
+		it("Interface with enmerable strings", () => {
 			enum UserGroup {
 				Admin = 'admin',
 				Manager = 'manager',
 				Employee = 'employee'
 			}
 
-			enum Asd {
-				One = 1,
-				Two = 2,
-				Three = 3
-			}
-
-			interface IMultiple{
+			interface IEnumerable {
 				enum: UserGroup;
 			}
 
-			interface IMultiple2{
-				enum1: UserGroup;
-				enum2: Asd;
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum: { type: 'enum', values: ['admin', 'manager', 'employee'] }
+			});
+		});
+
+		it("Interface with enmerable default numbers", () => {
+			enum UserGroup {
+				Admin,
+				Manager,
+				Employee
 			}
 
-			schema<IMultiple>()
-			schema<IMultiple2>()
+			interface IEnumerable {
+				enum_num: UserGroup;
+			}
 
-			/*expect(schema<IMultiple>()).toStrictEqual({
-				multiple: [
-					{ type: "string" },
-					{ type: "number" }
-				]
-			});*/
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum_num: { type: 'enum', values: [0, 1, 2] }
+			});
+		});
+
+		it("Interface with enmerable numbers", () => {
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 5
+			}
+
+			interface IEnumerable {
+				enum_num: UserGroup;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum_num: { type: 'enum', values: [1, 2, 5] }
+			});
+		});
+
+		it("Interface with mixed enmerable", () => {
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 'string'
+			}
+
+			interface IEnumerable {
+				enum_mixed: UserGroup;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum_mixed: { type: 'enum', values: [1, 2, 'string'] }
+			});
 		});
 	});
 
 	describe("Neased validator types test", () => {
 
-		it("Interface with any or string", () => {
+		it("Basic nester interfaces", () => {
 
-			interface INeasted{
+			interface INeasted {
 				num: number;
 				str: string;
 			}
 
-			interface IParent{
+			interface IParent {
 				neasted: INeasted;
 				num: number;
 			}
 
-			schema<IParent>()
-
-			/*expect(schema<IMultiple>()).toStrictEqual({
-				multiple: [
-					{ type: "string" },
-					{ type: "number" }
-				]
-			});*/
+			expect(schema<IParent>()).toStrictEqual({
+				neasted: { 
+					num: { type: 'number'},
+					str: { type: 'string'}
+				},
+				num: { type: 'number'}
+			});
 		});
 	});
 
@@ -154,38 +230,38 @@ describe("Test json schema tranformer", () => {
 
 		it("Interface extends interface", () => {
 
-			interface IExtendable{
+			interface IExtendable {
 				num: number;
 				str: string;
 			}
 
-			interface IExtended extends IExtendable{
+			interface IExtended extends IExtendable {
 				any: any;
 			}
 
 			expect(schema<IExtended>()).toStrictEqual({
-				num: "number",
-				str: "string",
-				any: "any"
+				num: { type: "number" },
+				str: { type: "string" },
+				any: { type: "any" }
 			});
 		});
 
 		it("Interface extends interface and overrides", () => {
 
-			interface IExtendable{
+			interface IExtendable {
 				num: number;
 				str: string;
 			}
 
-			interface IOverrided extends IExtendable{
+			interface IOverrided extends IExtendable {
 				any: any;
 				str: any;
 			}
 
 			expect(schema<IOverrided>()).toStrictEqual({
-				num: "number",
-				str: "any",
-				any: "any"
+				num: { type: "number" },
+				str: { type: "any" },
+				any: { type: "any" }
 			});
 		});
 	});
@@ -193,7 +269,7 @@ describe("Test json schema tranformer", () => {
 	describe("Bulk types tests", () => {
 
 		it("Interface with strings array", () => {
-			interface IBulk{
+			interface IBulk {
 				any: any;
 				bool: boolean;
 				num: number;
@@ -204,13 +280,13 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IBulk>()).toStrictEqual({
-				any: "any",
-				bool: "boolean",
-				num: "number",
-				str: "string",
-				aString: "array",
-				aNumber: "array",
-				aBoolean: "array"
+				any: { type: "any" },
+				bool: { type: "boolean" },
+				num: { type: "number" },
+				str: { type: "string" },
+				aString: { type: "array" },
+				aNumber: { type: "array" },
+				aBoolean: { type: "array" }
 			});
 		});
 
