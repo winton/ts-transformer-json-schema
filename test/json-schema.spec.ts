@@ -73,10 +73,26 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
-	describe("Multiple types tests", () => {
+	describe("Multiple validator types tests", () => {
+
+		it("Interface with any or string", () => {
+			interface IMultiple{
+				multiple: string | number;
+			}
+
+			expect(schema<IMultiple>()).toStrictEqual({
+				multiple: [
+					{ type: "string" },
+					{ type: "number" }
+				]
+			});
+		});
+	});
+
+	describe("Bulk types tests", () => {
 
 		it("Interface with strings array", () => {
-			interface IMultiple{
+			interface IBulk{
 				any: any;
 				bool: boolean;
 				num: number;
@@ -86,7 +102,7 @@ describe("Test json schema tranformer", () => {
 				aBoolean: boolean[];
 			}
 
-			expect(schema<IMultiple>()).toStrictEqual({
+			expect(schema<IBulk>()).toStrictEqual({
 				any: "any",
 				bool: "boolean",
 				num: "number",
