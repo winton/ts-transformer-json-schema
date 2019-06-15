@@ -32,6 +32,19 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
       property_type = "array";
     }
 
+    if (property_type.includes("|")) {
+      let property_types = property_type.split('|');
+      let literal_types = ts.createArrayLiteral(property_types.map( type => type.trim()).
+        map(type => {
+          return ts.createObjectLiteral([
+            ts.createPropertyAssignment("type", ts.createLiteral(type))
+          ]) 
+        })
+      );
+
+      return ts.createPropertyAssignment(property.name, literal_types);
+    }
+
     return ts.createPropertyAssignment(property.name, ts.createLiteral(property_type));
   });
 

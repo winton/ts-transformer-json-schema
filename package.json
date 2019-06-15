@@ -6,6 +6,7 @@
   "scripts": {
     "prepublish": "ttsc",
     "install": "ttsc",
+    "pretest": "ttsc",
     "test": "ttsc --project tsconfig.test.json && jest --coverage"
   },
   "repository": {
