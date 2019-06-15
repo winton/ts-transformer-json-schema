@@ -89,6 +89,107 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
+	describe("Enumerable validator types test", () => {
+
+		it("Interface with any or string", () => {
+			enum UserGroup {
+				Admin = 'admin',
+				Manager = 'manager',
+				Employee = 'employee'
+			}
+
+			enum Asd {
+				One = 1,
+				Two = 2,
+				Three = 3
+			}
+
+			interface IMultiple{
+				enum: UserGroup;
+			}
+
+			interface IMultiple2{
+				enum1: UserGroup;
+				enum2: Asd;
+			}
+
+			schema<IMultiple>()
+			schema<IMultiple2>()
+
+			/*expect(schema<IMultiple>()).toStrictEqual({
+				multiple: [
+					{ type: "string" },
+					{ type: "number" }
+				]
+			});*/
+		});
+	});
+
+	describe("Neased validator types test", () => {
+
+		it("Interface with any or string", () => {
+
+			interface INeasted{
+				num: number;
+				str: string;
+			}
+
+			interface IParent{
+				neasted: INeasted;
+				num: number;
+			}
+
+			schema<IParent>()
+
+			/*expect(schema<IMultiple>()).toStrictEqual({
+				multiple: [
+					{ type: "string" },
+					{ type: "number" }
+				]
+			});*/
+		});
+	});
+
+	describe("Extended validator types test", () => {
+
+		it("Interface extends interface", () => {
+
+			interface IExtendable{
+				num: number;
+				str: string;
+			}
+
+			interface IExtended extends IExtendable{
+				any: any;
+			}
+
+			expect(schema<IExtended>()).toStrictEqual({
+				num: "number",
+				str: "string",
+				any: "any"
+			});
+		});
+
+		it("Interface extends interface and overrides", () => {
+
+			interface IExtendable{
+				num: number;
+				str: string;
+			}
+
+			interface IOverrided extends IExtendable{
+				any: any;
+				str: any;
+			}
+
+			expect(schema<IOverrided>()).toStrictEqual({
+				num: "number",
+				str: "any",
+				any: "any"
+			});
+		});
+	});
+
 	describe("Bulk types tests", () => {
 
 		it("Interface with strings array", () => {
