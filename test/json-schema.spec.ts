@@ -246,7 +246,7 @@ describe("Test json schema tranformer", () => {
 
 	describe("Neased validator types test", () => {
 
-		it("Basic nester interfaces", () => {
+		it("Basic nested interfaces", () => {
 
 			interface INeasted {
 				num: number;
@@ -356,5 +356,23 @@ describe("Test json schema tranformer", () => {
 			});
 		});
 	});
+
+	/*describe("Infinite recursion test", () => {
+
+		it("Optional property any", () => {
+
+			interface IStep1 {
+				step2: IStep2;
+			}
+
+			interface IStep2 {
+				step1: IStep1;
+			}
+
+			expect(schema<IStep1>()).toStrictEqual({
+				step2: { step1: { type: "any" } }
+			});
+		});
+	});*/
 });
 
