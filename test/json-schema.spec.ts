@@ -357,6 +357,29 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
+	describe("Additional properties as anotation", () => {
+
+		it("Basic types with additional properties", () => {
+			interface IBasic {
+				/**
+				 * @min 1
+				 * @max 10
+				 */
+				str: string;
+
+				/**
+				 * @min 5
+				 * @max 15
+				 */
+				num: number;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string", min: 1, max: 10 },
+				num: { type: "number", min: 5, max: 15 }
+			});
+		});
+	});
+
 	/*describe("Infinite recursion test", () => {
 
 		it("Optional property any", () => {
