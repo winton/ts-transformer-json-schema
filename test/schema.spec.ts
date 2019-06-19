@@ -411,6 +411,80 @@ describe("Test json schema tranformer", () => {
 				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$"},
 			});
 		});
+
+		it("Additional properties neasted", () => {
+			interface IAdditional {
+				/**
+				 * @empty false
+				 * @numeric true
+				 */
+				str: string;
+
+				/**
+				 * @positive true
+				 * @convert true
+				 */
+				num: number;
+			}
+
+			interface IAdditional2 {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+				additional: IAdditional;
+			}
+			expect(schema<IAdditional2>()).toStrictEqual({
+				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
+				additional: {
+					str: { type: "string", empty: false, numeric: true },
+					num: { type: "number", positive: true, convert: true }
+				}
+			});
+		});
+
+		it("Additional properties neasted disabled", () => {
+			interface IAdditional {
+				/**
+				 * @empty false
+				 * @numeric true
+				 */
+				str: string;
+
+				/**
+				 * @positive true
+				 * @convert true
+				 */
+				num: number;
+			}
+
+			interface IAdditional2 {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+				additional: IAdditional;
+			}
+			expect(schema<IAdditional2>(false)).toStrictEqual({
+				str: { type: "string" },
+				additional: {
+					str: { type: "string" },
+					num: { type: "number" }
+				}
+			});
+		});
+
+		it("Additional properties disabled", () => {
+			interface IBasic {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+			}
+			expect(schema<IBasic>(false)).toStrictEqual({
+				str: { type: "string" },
+			});
+		});
 	});
 
 	describe("Infinite recursion test", () => {
