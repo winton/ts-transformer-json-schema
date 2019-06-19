@@ -28,7 +28,7 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
   }
 
   const type = typeChecker.getTypeFromTypeNode(node.typeArguments[0]);
-  return parseInterface(type, typeChecker);
+  return parseType(type, typeChecker, []);
 }
 
 function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node is ts.CallExpression {
@@ -47,7 +47,7 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
 /**
  * PARSING LOGIC
  */
-function parseType(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.ObjectLiteralExpression {
 
   const flags = type.flags;
 
@@ -161,6 +161,32 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpr
 
       combined_properties.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
       parsed = ts.createObjectLiteral(combined_properties);
+    }
+
+    const docs = property.getJsDocTags();
+    if(docs.length && parsed.properties){
+      docs.forEach( doc => {
+        if(doc.text){
+          const combined_properties: ts.ObjectLiteralElementLike[] = [];
+          parsed.properties.forEach( property => combined_properties.push(property));
+
+          let value: any = doc.text;
+          if(doc.text === "true"){
+            value = true;
+          }
+
+          if(doc.text === "false"){
+            value = false;
+          }
+
+          if(/^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/.test(doc.text)){
+            value = Number(doc.text);
+          }
+  
+          combined_properties.push(ts.createPropertyAssignment(doc.name, ts.createLiteral(value)));
+          parsed = ts.createObjectLiteral(combined_properties);
+        }
+      });
     }
 
     return ts.createPropertyAssignment(property.name, parsed);
