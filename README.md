@@ -44,6 +44,9 @@ const GreeterService: ServiceSchema = {
 }
 ```
 
+There is moleculer template that comes with this transformer and configure compiler to use it:
+https://github.com/ipetrovic11/moleculer-template-typescript/blob/master/README.md
+
 ## How to use the custom transformer
 
 Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (See https://github.com/Microsoft/TypeScript/issues/14419).
@@ -65,7 +68,9 @@ See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/READ
 }
 ```
 
-### Transformer covers
+### What can be transformed
+
+Currently transformer can handle:
 * Interfaces
 * Neasted interfaces
 * Extended interfaces
