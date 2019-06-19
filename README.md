@@ -65,6 +65,24 @@ See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/READ
 }
 ```
 
+### Transformer covers
+* Interfaces
+* Neasted interfaces
+* Extended interfaces
+
+* Intersections and Unions
+
+* Enums
+* Emails - Predefined - IEmail
+* Dates - Predefined - IDate
+* UUID - Predefined - IUUID
+* Forbidden - Predefined - IForbidden
+
+* Additional properties
+
+Take a look at [tests](https://github.com/ipetrovic11/ts-transformer-json-schema/blob/master/test/schema.spec.ts) for all possibilities.
+All cases from fastest-validator should be covered, if not please report the issue.
+
 # License
 
 MIT
