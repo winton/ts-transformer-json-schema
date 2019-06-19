@@ -67,7 +67,17 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.Ob
     let objectType: ts.ObjectType = type as ts.ObjectType;
 
     if (objectType.objectFlags === ts.ObjectFlags.Interface) {
-      return parseInterface(type, tc);
+      const name = type.symbol.name;
+      
+      if(history && history.indexOf(name) !== -1){
+        return ts.createObjectLiteral([
+          ts.createPropertyAssignment("type", ts.createLiteral("any"))
+        ]);
+      }else if(history){
+        history.push(name);
+      }
+
+      return parseInterface(type, tc, history);
     }
 
     if (objectType.objectFlags === ts.ObjectFlags.Reference) {
@@ -76,11 +86,11 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.Ob
   }
 
   if (flags === ts.TypeFlags.Union) {
-    return parseUnion(type, tc);
+    return parseUnion(type, tc, history);
   }
 
   if (flags === ts.TypeFlags.Intersection) {
-    return parseIntersection(type, tc);
+    return parseIntersection(type, tc, history);
   }
 
   if (flags & ts.TypeFlags.EnumLike) {
@@ -115,7 +125,7 @@ function parseArray(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
   ]);
 }
 
-function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseUnion(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.ObjectLiteralExpression {
   const union_type = type as ts.UnionOrIntersectionType;
   const types = union_type.types.filter(union_property => tc.typeToString(union_property) !== 'undefined')
   .map( union_property => {
@@ -125,7 +135,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
       ]);
     }
 
-    return parseType(union_property, tc);
+    return parseType(union_property, tc, history);
   });
 
   
@@ -133,10 +143,10 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
   return ts.createArrayLiteral(types) as unknown as ts.ObjectLiteralExpression;
 }
 
-function parseIntersection(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseIntersection(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.ObjectLiteralExpression {
   const intersection_type = type as ts.UnionOrIntersectionType;
   const types = intersection_type.types.map( intersection_property => {
-    return parseType(intersection_property, tc);
+    return parseType(intersection_property, tc, history);
   });
 
   const combined_properties: ts.ObjectLiteralElementLike[] = [];
@@ -147,11 +157,11 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralE
   return ts.createObjectLiteral(combined_properties);
 }
 
-function parseInterface(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
   const properties_assignments = properties.map( property => {
-    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc);
+    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, history);
  
     const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
     if(declaration.questionToken && parsed.properties){

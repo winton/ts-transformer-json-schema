@@ -412,9 +412,9 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
-	/*describe("Infinite recursion test", () => {
+	describe("Infinite recursion test", () => {
 
-		it("Optional property any", () => {
+		it("Infinite recursion or 2 interfaces", () => {
 
 			interface IStep1 {
 				step2: IStep2;
@@ -428,6 +428,6 @@ describe("Test json schema tranformer", () => {
 				step2: { step1: { type: "any" } }
 			});
 		});
-	});*/
+	});
 });
 
