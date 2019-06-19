@@ -1,48 +1,30 @@
-# ts-transformer-json-schema
-A TypeScript custom transformer to obtain JSON schema of interface
+[![Build Status][travis-image]][travis-url] [![Downloads](https://img.shields.io/npm/dm/ts-transformer-json-schema.svg)](https://www.npmjs.com/package/ts-transformer-json-schema)
 
-[![Build Status][travis-image]][travis-url]
-[![NPM version][npm-image]][npm-url]
-[![Downloads](https://img.shields.io/npm/dm/ts-transformer-json-schema.svg)](https://www.npmjs.com/package/ts-transformer-json-schema)
-
-# Requirement
-TypeScript >= 2.4.1
-
-# What is this package
-
-This package is custom ts transformer which compiles TS Interface to json schema.
-Main intention for this package is to facilitate usage of TS Intefraces for [Moleculer validator](https://moleculer.services/docs/0.13/validating.html).
-
-Moleculer validator uses [fast-validator](https://github.com/icebob/fastest-validator)
-
-## How to use Json-schema
+# ts-transformer-json-schema [![NPM version][npm-image]][npm-url]
+A TypeScript custom transformer to obtain json schema for [fast-validator](https://github.com/icebob/fastest-validator) from TypeScript interface
 
 ```
 $ npm install ts-transformer-json-schema --save
 ```
 
+# Requirement
+TypeScript >= 2.4.1
+TTypeScript
+
+## How to use directly with fastest-validator
 ```ts
 import { schema } from 'ts-transformer-json-schema';
+import Validator from 'fastest';
 
 interface IExample {
   str: string;
-  num: number;
-  bool: boolean;
-  obj: any;
-  array: number[];
-  array2: Array<number>
 }
-const IExample_schema = schema<Props>();
 
-console.log(IExample_schema); // { str: "string", num: "number" ... }
+const v = new Validator();
+v.validate({ str: 'string' }, schema<IExample>());
 ```
 
 ## How to use with Moleculer
-
-In order to start using it with Moleculer you have to change compiler to Ttypescript.
-You need to change it for build, ts-node and jest.
-But first follow the guide how to use the custom transformer with ttypescript.
-
 ```ts
 import { schema } from 'ts-transformer-json-schema';
 
@@ -51,25 +33,23 @@ interface IUser {
 }
 
 const GreeterService: ServiceSchema = {
-  // ...
-	welcome: {
-		params: schema<IUser>(),
-		handler({ params }: Context<IUser>) {
-			return `Welcome, ${params.name}`;
+  actions: {
+    welcome: {
+      params: schema<IUser>(),
+      handler({ params: user }: Context<IUser>) {
+        return `Welcome, ${user.name}`;
+      }
     }
   }
-  // ...
 }
 ```
 
 ## How to use the custom transformer
 
 Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (See https://github.com/Microsoft/TypeScript/issues/14419).
-The followings are the example usage of the custom transformer.
 
-### ttypescript
+### For ttypescript
 
-See [examples/ttypescript](examples/ttypescript) for detail.
 See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/README.md) for how to use this with module bundlers such as webpack or Rollup.
 
 ```json
@@ -84,16 +64,6 @@ See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/READ
   // ...
 }
 ```
-
-### TypeScript API
-
-See [test](test) for detail.
-You can try it with `$ npm test`.
-
-# Note
-
-* The `schema` function can only be used as a call expression. Writing something like `schema.toString()` results in a runtime error.
-* `schema` does not work with a dynamic type parameter, i.e., `schema<T>()` in the following code is converted to an empty object(`{}`).
 
 # License
 

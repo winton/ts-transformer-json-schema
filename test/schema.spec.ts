@@ -1,6 +1,8 @@
 "use strict";
 
 import { schema } from '../index';
+import { IExternal } from './interfaces';
+import { IEmail, IDate, IForbidden, IUrl, IUUID } from '../predefined';
 
 describe("Test json schema tranformer", () => {
 
@@ -246,7 +248,7 @@ describe("Test json schema tranformer", () => {
 
 	describe("Neased validator types test", () => {
 
-		it("Basic nester interfaces", () => {
+		it("Basic nested interfaces", () => {
 
 			interface INeasted {
 				num: number;
@@ -353,6 +355,251 @@ describe("Test json schema tranformer", () => {
 
 			expect(schema<IOptional>()).toStrictEqual({
 				optional: [{ type: "string" }, { type: "number" }]
+			});
+		});
+	});
+
+	describe("Additional properties as anotation", () => {
+
+		it("Basic types with additional properties as number", () => {
+			interface IBasic {
+				/**
+				 * @min 1
+				 * @max 10
+				 */
+				str: string;
+
+				/**
+				 * @min 5
+				 * @max 15
+				 */
+				num: number;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string", min: 1, max: 10 },
+				num: { type: "number", min: 5, max: 15 }
+			});
+		});
+
+		it("Basic types with additional properties as boolean", () => {
+			interface IBasic {
+				/**
+				 * @empty false
+				 * @numeric true
+				 */
+				str: string;
+
+				/**
+				 * @positive true
+				 * @convert true
+				 */
+				num: number;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string", empty: false, numeric: true},
+				num: { type: "number", positive: true, convert: true }
+			});
+		});
+
+		it("Basic types with additional properties as regex", () => {
+			interface IBasic {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$"},
+			});
+		});
+
+		it("Additional properties neasted", () => {
+			interface IAdditional {
+				/**
+				 * @empty false
+				 * @numeric true
+				 */
+				str: string;
+
+				/**
+				 * @positive true
+				 * @convert true
+				 */
+				num: number;
+			}
+
+			interface IAdditional2 {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+				additional: IAdditional;
+			}
+			expect(schema<IAdditional2>()).toStrictEqual({
+				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
+				additional: {
+					str: { type: "string", empty: false, numeric: true },
+					num: { type: "number", positive: true, convert: true }
+				}
+			});
+		});
+
+		it("Additional properties neasted disabled", () => {
+			interface IAdditional {
+				/**
+				 * @empty false
+				 * @numeric true
+				 */
+				str: string;
+
+				/**
+				 * @positive true
+				 * @convert true
+				 */
+				num: number;
+			}
+
+			interface IAdditional2 {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+				additional: IAdditional;
+			}
+			expect(schema<IAdditional2>(false)).toStrictEqual({
+				str: { type: "string" },
+				additional: {
+					str: { type: "string" },
+					num: { type: "number" }
+				}
+			});
+		});
+
+		it("Additional properties disabled", () => {
+			interface IBasic {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+			}
+			expect(schema<IBasic>(false)).toStrictEqual({
+				str: { type: "string" },
+			});
+		});
+
+		it("Additional properties on interface", () => {
+			/**
+			 * @$$strict true
+			 */
+			interface IBasic {
+				str: string;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string" },
+				$$strict: true
+			});
+		});
+
+		it("Additional properties from external file", () => {
+
+			expect(schema<IExternal>()).toStrictEqual({
+				str: { type: "string", empty: false, numeric: true},
+				num: { type: "number", positive: true, convert: true },
+				$$strict: true
+			});
+		});
+	});
+
+	describe("Infinite recursion test", () => {
+
+		it("Infinite recursion or 2 interfaces", () => {
+
+			interface IStep1 {
+				step2: IStep2;
+			}
+
+			interface IStep2 {
+				step1: IStep1;
+			}
+
+			expect(schema<IStep1>()).toStrictEqual({
+				step2: { step1: { type: "any" } }
+			});
+		});
+	});
+
+	describe("Predefined types", () => {
+
+		it("Predefined IEmail", () => {
+
+			interface IPredefined {
+				email: IEmail;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				email: { type: "email" }
+			});
+		});
+
+		it("Predefined IDate", () => {
+
+			interface IPredefined {
+				date: IDate;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				date: { type: "date" }
+			});
+		});
+
+		it("Predefined IForbidden", () => {
+
+			interface IPredefined {
+				forbidden: IForbidden;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				forbidden: { type: "forbidden" }
+			});
+		});
+
+		it("Predefined IUrl", () => {
+
+			interface IPredefined {
+				url: IUrl;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				url: { type: "url" }
+			});
+		});
+
+		it("Predefined IUUID", () => {
+
+			interface IPredefined {
+				uuid: IUUID;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				uuid: { type: "uuid" }
+			});
+		});
+
+		it("Predefined in union", () => {
+
+			interface IPredefined {
+				uuid: IUUID;
+			}
+
+			interface IUnion {
+				target: string | IPredefined
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				target: [
+					{ type: "string" },
+					{ uuid: { type: "uuid" } }
+				]
 			});
 		});
 	});

@@ -1,5 +1,13 @@
 import * as ts from "typescript";
 
+const predefined = {
+  IDate: "date",
+  IEmail: "email",
+  IForbidden: "forbidden",
+  IUrl: "url",
+  IUUID: "uuid"
+};
+
 export default function transformer(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
   return (context: ts.TransformationContext) => (file: ts.SourceFile) => visitNodeAndChildren(file, program, context);
 }
@@ -27,8 +35,14 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
     return ts.createObjectLiteral();
   }
 
+  let additional = true;
+  if(node.arguments[0] &&
+    typeChecker.getTypeAtLocation(node.arguments[0])["intrinsicName"] === "false"){
+    additional = false;
+  }
+
   const type = typeChecker.getTypeFromTypeNode(node.typeArguments[0]);
-  return parseInterface(type, typeChecker);
+  return parseType(type, typeChecker, [], additional);
 }
 
 function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node is ts.CallExpression {
@@ -47,7 +61,8 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
 /**
  * PARSING LOGIC
  */
-function parseType(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+  additional?: boolean): ts.ObjectLiteralExpression {
 
   const flags = type.flags;
 
@@ -67,7 +82,23 @@ function parseType(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressio
     let objectType: ts.ObjectType = type as ts.ObjectType;
 
     if (objectType.objectFlags === ts.ObjectFlags.Interface) {
-      return parseInterface(type, tc);
+      const name = type.symbol.name;
+      
+      if(predefined[name]){
+        return ts.createObjectLiteral([
+          ts.createPropertyAssignment("type", ts.createLiteral(predefined[name]))
+        ]);
+      }
+
+      if(history && history.indexOf(name) !== -1){
+        return ts.createObjectLiteral([
+          ts.createPropertyAssignment("type", ts.createLiteral("any"))
+        ]);
+      }else if(history){
+        history.push(name);
+      }
+
+      return parseInterface(type, tc, history, additional);
     }
 
     if (objectType.objectFlags === ts.ObjectFlags.Reference) {
@@ -76,11 +107,11 @@ function parseType(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressio
   }
 
   if (flags === ts.TypeFlags.Union) {
-    return parseUnion(type, tc);
+    return parseUnion(type, tc, history);
   }
 
   if (flags === ts.TypeFlags.Intersection) {
-    return parseIntersection(type, tc);
+    return parseIntersection(type, tc, history);
   }
 
   if (flags & ts.TypeFlags.EnumLike) {
@@ -115,7 +146,8 @@ function parseArray(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
   ]);
 }
 
-function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseUnion(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+  additional?: boolean): ts.ObjectLiteralExpression {
   const union_type = type as ts.UnionOrIntersectionType;
   const types = union_type.types.filter(union_property => tc.typeToString(union_property) !== 'undefined')
   .map( union_property => {
@@ -125,7 +157,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
       ]);
     }
 
-    return parseType(union_property, tc);
+    return parseType(union_property, tc, history, additional);
   });
 
   
@@ -133,10 +165,11 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressi
   return ts.createArrayLiteral(types) as unknown as ts.ObjectLiteralExpression;
 }
 
-function parseIntersection(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseIntersection(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+  additional?: boolean): ts.ObjectLiteralExpression {
   const intersection_type = type as ts.UnionOrIntersectionType;
   const types = intersection_type.types.map( intersection_property => {
-    return parseType(intersection_property, tc);
+    return parseType(intersection_property, tc, history, additional);
   });
 
   const combined_properties: ts.ObjectLiteralElementLike[] = [];
@@ -147,11 +180,12 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralE
   return ts.createObjectLiteral(combined_properties);
 }
 
-function parseInterface(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+  additional?: boolean): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
   const properties_assignments = properties.map( property => {
-    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc);
+    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, history, additional);
  
     const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
     if(declaration.questionToken && parsed.properties){
@@ -163,8 +197,67 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpr
       parsed = ts.createObjectLiteral(combined_properties);
     }
 
+    const docs = property.getJsDocTags();
+    if(additional && docs.length && parsed.properties){
+      parsed = addProperties(parsed, parseJSDoc(docs));
+    }
+
     return ts.createPropertyAssignment(property.name, parsed);
   })
 
+  const docs = type.symbol.getJsDocTags();
+  if(additional && docs.length){
+    parseJSDoc(docs).forEach( property => {
+      properties_assignments.push(property);
+    });
+  }
+
   return ts.createObjectLiteral(properties_assignments); 
+}
+
+
+
+/**
+ * HELPER FUNCTIONS
+ */
+function combineObjects(o1: ts.ObjectLiteralExpression, o2: ts.ObjectLiteralExpression): ts.ObjectLiteralExpression{
+  const combined_properties: ts.ObjectLiteralElementLike[] = [];
+
+  o1.properties.forEach( property => combined_properties.push(property));
+  o2.properties.forEach( property => combined_properties.push(property));
+
+  return ts.createObjectLiteral(combined_properties);
+}
+
+function addProperties(object: ts.ObjectLiteralExpression, combined_properties: ts.ObjectLiteralElementLike[]): ts.ObjectLiteralExpression{
+  object.properties.forEach( property => combined_properties.push(property));
+  return ts.createObjectLiteral(combined_properties);
+}
+
+function addProperty(object: ts.ObjectLiteralExpression, name: string, value: any): ts.ObjectLiteralExpression{
+  const combined_properties: ts.ObjectLiteralElementLike[] = [];
+
+  object.properties.forEach( property => combined_properties.push(property));
+  combined_properties.push(ts.createPropertyAssignment(name, ts.createLiteral(value)));
+
+  return ts.createObjectLiteral(combined_properties);
+}
+
+function parseJSDoc(docs: ts.JSDocTagInfo[]): ts.PropertyAssignment[]{
+  return docs.filter(doc => doc.text).map( doc => {
+      let value: any = doc.text;
+      if(value === "true"){
+        value = true;
+      }
+
+      if(value === "false"){
+        value = false;
+      }
+
+      if(/^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/.test(value)){
+        value = Number(value);
+      }
+
+      return ts.createPropertyAssignment(doc.name, ts.createLiteral(value))
+  });
 }
