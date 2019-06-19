@@ -199,32 +199,65 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
 
     const docs = property.getJsDocTags();
     if(additional && docs.length && parsed.properties){
-      docs.forEach( doc => {
-        if(doc.text){
-          const combined_properties: ts.ObjectLiteralElementLike[] = [];
-          parsed.properties.forEach( property => combined_properties.push(property));
-
-          let value: any = doc.text;
-          if(doc.text === "true"){
-            value = true;
-          }
-
-          if(doc.text === "false"){
-            value = false;
-          }
-
-          if(/^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/.test(doc.text)){
-            value = Number(doc.text);
-          }
-  
-          combined_properties.push(ts.createPropertyAssignment(doc.name, ts.createLiteral(value)));
-          parsed = ts.createObjectLiteral(combined_properties);
-        }
-      });
+      parsed = addProperties(parsed, parseJSDoc(docs));
     }
 
     return ts.createPropertyAssignment(property.name, parsed);
   })
 
+  const docs = type.symbol.getJsDocTags();
+  if(additional && docs.length){
+    parseJSDoc(docs).forEach( property => {
+      properties_assignments.push(property);
+    });
+  }
+
   return ts.createObjectLiteral(properties_assignments); 
+}
+
+
+
+/**
+ * HELPER FUNCTIONS
+ */
+function combineObjects(o1: ts.ObjectLiteralExpression, o2: ts.ObjectLiteralExpression): ts.ObjectLiteralExpression{
+  const combined_properties: ts.ObjectLiteralElementLike[] = [];
+
+  o1.properties.forEach( property => combined_properties.push(property));
+  o2.properties.forEach( property => combined_properties.push(property));
+
+  return ts.createObjectLiteral(combined_properties);
+}
+
+function addProperties(object: ts.ObjectLiteralExpression, combined_properties: ts.ObjectLiteralElementLike[]): ts.ObjectLiteralExpression{
+  object.properties.forEach( property => combined_properties.push(property));
+  return ts.createObjectLiteral(combined_properties);
+}
+
+function addProperty(object: ts.ObjectLiteralExpression, name: string, value: any): ts.ObjectLiteralExpression{
+  const combined_properties: ts.ObjectLiteralElementLike[] = [];
+
+  object.properties.forEach( property => combined_properties.push(property));
+  combined_properties.push(ts.createPropertyAssignment(name, ts.createLiteral(value)));
+
+  return ts.createObjectLiteral(combined_properties);
+}
+
+function parseJSDoc(docs: ts.JSDocTagInfo[]): ts.PropertyAssignment[]{
+  return docs.filter(doc => doc.text).map( doc => {
+      let value: any = doc.text;
+      if(value === "true"){
+        value = true;
+      }
+
+      if(value === "false"){
+        value = false;
+      }
+
+      if(/^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/.test(value)){
+        value = Number(value);
+      }
+
+      return ts.createPropertyAssignment(doc.name, ts.createLiteral(value))
+  });
 }
