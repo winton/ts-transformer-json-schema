@@ -1,6 +1,7 @@
 "use strict";
 
 import { schema } from '../index';
+import { IExternal } from './interfaces';
 import { IEmail, IDate, IForbidden, IUrl, IUUID } from '../predefined';
 
 describe("Test json schema tranformer", () => {
@@ -483,6 +484,28 @@ describe("Test json schema tranformer", () => {
 			}
 			expect(schema<IBasic>(false)).toStrictEqual({
 				str: { type: "string" },
+			});
+		});
+
+		it("Additional properties on interface", () => {
+			/**
+			 * @$$strict true
+			 */
+			interface IBasic {
+				str: string;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string" },
+				$$strict: true
+			});
+		});
+
+		it("Additional properties from external file", () => {
+
+			expect(schema<IExternal>()).toStrictEqual({
+				str: { type: "string", empty: false, numeric: true},
+				num: { type: "number", positive: true, convert: true },
+				$$strict: true
 			});
 		});
 	});
