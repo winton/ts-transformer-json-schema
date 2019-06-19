@@ -179,8 +179,8 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpr
             value = false;
           }
 
-          if(/^\d+$/.test(doc.text)){
-            value = parseInt(doc.text);
+          if(/^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/.test(doc.text)){
+            value = Number(doc.text);
           }
   
           combined_properties.push(ts.createPropertyAssignment(doc.name, ts.createLiteral(value)));

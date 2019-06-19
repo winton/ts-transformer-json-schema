@@ -359,7 +359,7 @@ describe("Test json schema tranformer", () => {
 
 	describe("Additional properties as anotation", () => {
 
-		it("Basic types with additional properties", () => {
+		it("Basic types with additional properties as number", () => {
 			interface IBasic {
 				/**
 				 * @min 1
@@ -376,6 +376,38 @@ describe("Test json schema tranformer", () => {
 			expect(schema<IBasic>()).toStrictEqual({
 				str: { type: "string", min: 1, max: 10 },
 				num: { type: "number", min: 5, max: 15 }
+			});
+		});
+
+		it("Basic types with additional properties as boolean", () => {
+			interface IBasic {
+				/**
+				 * @empty false
+				 * @numeric true
+				 */
+				str: string;
+
+				/**
+				 * @positive true
+				 * @convert true
+				 */
+				num: number;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string", empty: false, numeric: true},
+				num: { type: "number", positive: true, convert: true }
+			});
+		});
+
+		it("Basic types with additional properties as regex", () => {
+			interface IBasic {
+				/**
+				 * @pattern ^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$
+				 */
+				str: string;
+			}
+			expect(schema<IBasic>()).toStrictEqual({
+				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$"},
 			});
 		});
 	});
