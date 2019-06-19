@@ -45,7 +45,7 @@ const GreeterService: ServiceSchema = {
 ```
 
 There is moleculer template that comes with this transformer and configure compiler to use it:
-https://github.com/ipetrovic11/moleculer-template-typescript/blob/master/README.md
+https://github.com/ipetrovic11/moleculer-template-typescript
 
 ## How to use the custom transformer
 
