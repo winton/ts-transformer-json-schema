@@ -1,5 +1,13 @@
 import * as ts from "typescript";
 
+const predefined = {
+  IDate: "date",
+  IEmail: "email",
+  IForbidden: "forbidden",
+  IUrl: "url",
+  IUUID: "uuid"
+};
+
 export default function transformer(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
   return (context: ts.TransformationContext) => (file: ts.SourceFile) => visitNodeAndChildren(file, program, context);
 }
@@ -69,6 +77,12 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[]): ts.Ob
     if (objectType.objectFlags === ts.ObjectFlags.Interface) {
       const name = type.symbol.name;
       
+      if(predefined[name]){
+        return ts.createObjectLiteral([
+          ts.createPropertyAssignment("type", ts.createLiteral(predefined[name]))
+        ]);
+      }
+
       if(history && history.indexOf(name) !== -1){
         return ts.createObjectLiteral([
           ts.createPropertyAssignment("type", ts.createLiteral("any"))

@@ -1,6 +1,7 @@
 "use strict";
 
 import { schema } from '../index';
+import { IEmail, IDate, IForbidden, IUrl, IUUID } from '../predefined';
 
 describe("Test json schema tranformer", () => {
 
@@ -426,6 +427,82 @@ describe("Test json schema tranformer", () => {
 
 			expect(schema<IStep1>()).toStrictEqual({
 				step2: { step1: { type: "any" } }
+			});
+		});
+	});
+
+	describe("Predefined types", () => {
+
+		it("Predefined IEmail", () => {
+
+			interface IPredefined {
+				email: IEmail;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				email: { type: "email" }
+			});
+		});
+
+		it("Predefined IDate", () => {
+
+			interface IPredefined {
+				date: IDate;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				date: { type: "date" }
+			});
+		});
+
+		it("Predefined IForbidden", () => {
+
+			interface IPredefined {
+				forbidden: IForbidden;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				forbidden: { type: "forbidden" }
+			});
+		});
+
+		it("Predefined IUrl", () => {
+
+			interface IPredefined {
+				url: IUrl;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				url: { type: "url" }
+			});
+		});
+
+		it("Predefined IUUID", () => {
+
+			interface IPredefined {
+				uuid: IUUID;
+			}
+
+			expect(schema<IPredefined>()).toStrictEqual({
+				uuid: { type: "uuid" }
+			});
+		});
+
+		it("Predefined in union", () => {
+
+			interface IPredefined {
+				uuid: IUUID;
+			}
+
+			interface IUnion {
+				target: string | IPredefined
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({
+				target: [
+					{ type: "string" },
+					{ uuid: { type: "uuid" } }
+				]
 			});
 		});
 	});
