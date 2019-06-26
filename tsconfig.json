@@ -3,7 +3,6 @@
     "target": "es6",
     "module": "commonjs",
     "strict": true,
-    "suppressImplicitAnyIndexErrors": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
