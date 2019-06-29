@@ -1,12 +1,20 @@
 import * as ts from "typescript";
 
-const predefined = {
+const predefined: { [interfaceName: string]: string } = {
   IDate: "date",
   IEmail: "email",
   IForbidden: "forbidden",
   IUrl: "url",
   IUUID: "uuid"
 };
+
+interface MaybeIntrinsicType {
+  intrinsicName?: string;
+}
+
+interface LiteralType {
+  value: string | number | ts.PseudoBigInt;
+}
 
 export default function transformer(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
   return (context: ts.TransformationContext) => (file: ts.SourceFile) => visitNodeAndChildren(file, program, context);
@@ -36,8 +44,9 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
   }
 
   let additional = true;
+  const typeArg = typeChecker.getTypeAtLocation(node.arguments[0]);
   if(node.arguments[0] &&
-    typeChecker.getTypeAtLocation(node.arguments[0])["intrinsicName"] === "false"){
+    (typeArg as MaybeIntrinsicType).intrinsicName === "false"){
     additional = false;
   }
 
@@ -131,7 +140,7 @@ function parsePrimitive(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpr
 function parseEnum(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
   const enum_type = type as ts.UnionOrIntersectionType;
   const values = enum_type.types.map( enum_property => {
-    return ts.createLiteral(enum_property['value']);
+    return ts.createLiteral((enum_property as unknown as LiteralType).value);
   });
 
   return ts.createObjectLiteral([
