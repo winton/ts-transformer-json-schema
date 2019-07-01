@@ -70,6 +70,62 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
 /**
  * PARSING LOGIC
  */
+
+function detectType(type: ts.Type, history?: string[]): string {
+
+  const flags = type.flags;
+
+  if (flags & ts.TypeFlags.StringLike ||
+    flags & ts.TypeFlags.NumberLike ||
+    flags & ts.TypeFlags.BooleanLike ||
+    flags === ts.TypeFlags.Any) {
+    return 'primitive';
+  }
+
+  if (flags === ts.TypeFlags.Null ||
+    flags === ts.TypeFlags.Undefined) {
+      return 'null';
+  }
+
+  if (flags === ts.TypeFlags.Object) {
+    let objectType: ts.ObjectType = type as ts.ObjectType;
+
+    if (objectType.objectFlags === ts.ObjectFlags.Interface) {
+      const name = type.symbol.name;
+      
+      if(predefined[name]){
+        return 'predefined';
+      }
+
+      if(history && history.indexOf(name) !== -1){
+        return 'infinite';
+      }else if(history){
+        history.push(name);
+      }
+
+      return 'interface';
+    }
+
+    if (objectType.objectFlags === ts.ObjectFlags.Reference) {
+      return 'array';
+    }
+  }
+
+  if (flags === ts.TypeFlags.Union) {
+    return 'union';
+  }
+
+  if (flags === ts.TypeFlags.Intersection) {
+    return 'intersection';
+  }
+
+  if (flags & ts.TypeFlags.EnumLike) {
+    return 'enum';
+  }
+
+  return 'unknown';
+}
+
 function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
 
@@ -193,6 +249,18 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
+  const nested = properties.reduce( (result, property) => {
+
+
+    const historyClone = history? history.slice() : [];
+    
+    let type = detectType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), historyClone);
+    const current = type === 'interface' || type === 'infinite';
+    
+    return result || current;
+  }, false);
+  
+
   const properties_assignments = properties.map( property => {
     let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, history, additional);
  
@@ -219,6 +287,13 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
     parseJSDoc(docs).forEach( property => {
       properties_assignments.push(property);
     });
+  }
+
+  if(nested){
+    const neasted_properties_assignments = [];
+    neasted_properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
+    neasted_properties_assignments.push(ts.createPropertyAssignment("props", ts.createObjectLiteral(properties_assignments)));
+    return ts.createObjectLiteral(neasted_properties_assignments); 
   }
 
   return ts.createObjectLiteral(properties_assignments); 
