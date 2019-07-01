@@ -250,22 +250,25 @@ describe("Test json schema tranformer", () => {
 
 		it("Basic nested interfaces", () => {
 
-			interface INeasted {
+			interface IInner {
 				num: number;
 				str: string;
 			}
 
-			interface IParent {
-				neasted: INeasted;
+			interface IOuter {
+				neasted: IInner;
 				num: number;
 			}
 
-			expect(schema<IParent>()).toStrictEqual({
-				neasted: { 
-					num: { type: 'number'},
-					str: { type: 'string'}
-				},
-				num: { type: 'number'}
+			expect(schema<IOuter>()).toStrictEqual({
+				type: "object",
+				props: {
+					neasted: { 
+						num: { type: 'number'},
+						str: { type: 'string'}
+					},
+					num: { type: 'number'}
+				}
 			});
 		});
 	});
@@ -436,10 +439,13 @@ describe("Test json schema tranformer", () => {
 				additional: IAdditional;
 			}
 			expect(schema<IAdditional2>()).toStrictEqual({
-				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
-				additional: {
-					str: { type: "string", empty: false, numeric: true },
-					num: { type: "number", positive: true, convert: true }
+				type: "object",
+    			props: {
+					str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
+					additional: {
+						str: { type: "string", empty: false, numeric: true },
+						num: { type: "number", positive: true, convert: true }
+					}
 				}
 			});
 		});
@@ -467,10 +473,13 @@ describe("Test json schema tranformer", () => {
 				additional: IAdditional;
 			}
 			expect(schema<IAdditional2>(false)).toStrictEqual({
-				str: { type: "string" },
-				additional: {
+				type: "object",
+    			props: {
 					str: { type: "string" },
-					num: { type: "number" }
+					additional: {
+						str: { type: "string" },
+						num: { type: "number" }
+					}
 				}
 			});
 		});
@@ -523,7 +532,14 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IStep1>()).toStrictEqual({
-				step2: { step1: { type: "any" } }
+				type: "object",
+				props: {
+					step2: { 
+						type: "object",
+						props: {
+							step1: { type: "any" } }
+						}
+				}
 			});
 		});
 	});
