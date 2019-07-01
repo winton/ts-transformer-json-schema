@@ -24,7 +24,9 @@
     "index.js",
     "index.ts",
     "transformer.js",
-    "transformer.ts"
+    "transformer.ts",
+    "predefined.d.ts",
+    "predefined.js"
   ],
   "homepage": "https://github.com/ipetrovic11/ts-transformer-json-schema",
   "devDependencies": {
