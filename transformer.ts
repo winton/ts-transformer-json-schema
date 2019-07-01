@@ -250,8 +250,6 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
   const nested = properties.reduce( (result, property) => {
-
-
     const historyClone = history? history.slice() : [];
     
     let type = detectType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), historyClone);
