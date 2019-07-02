@@ -1,7 +1,7 @@
 [![Build Status][travis-image]][travis-url] [![Downloads](https://img.shields.io/npm/dm/ts-transformer-json-schema.svg)](https://www.npmjs.com/package/ts-transformer-json-schema)
 
 # ts-transformer-json-schema [![NPM version][npm-image]][npm-url]
-A TypeScript custom transformer to obtain json schema for [fast-validator](https://github.com/icebob/fastest-validator) from TypeScript interface
+A TypeScript custom transformer to obtain json schema for [fastest-validator](https://github.com/icebob/fastest-validator) from TypeScript interface
 
 ```
 $ npm install ts-transformer-json-schema --save
