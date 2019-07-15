@@ -1,5 +1,10 @@
 import * as ts from "typescript";
 
+interface ArrayTypeChecker extends ts.TypeChecker{
+  isArrayType(a: ts.Type): boolean;
+  isArrayLikeType(a: ts.Type): boolean;
+}
+
 const predefined: { [interfaceName: string]: string } = {
   IDate: "date",
   IEmail: "email",
@@ -71,61 +76,6 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
  * PARSING LOGIC
  */
 
-function detectType(type: ts.Type, history?: string[]): string {
-
-  const flags = type.flags;
-
-  if (flags & ts.TypeFlags.StringLike ||
-    flags & ts.TypeFlags.NumberLike ||
-    flags & ts.TypeFlags.BooleanLike ||
-    flags === ts.TypeFlags.Any) {
-    return 'primitive';
-  }
-
-  if (flags === ts.TypeFlags.Null ||
-    flags === ts.TypeFlags.Undefined) {
-    return 'null';
-  }
-
-  if (flags === ts.TypeFlags.Object) {
-    let objectType: ts.ObjectType = type as ts.ObjectType;
-
-    if (objectType.objectFlags === ts.ObjectFlags.Interface) {
-      const name = type.symbol.name;
-
-      if (predefined[name]) {
-        return 'predefined';
-      }
-
-      if (history && history.indexOf(name) !== -1) {
-        return 'infinite';
-      } else if (history) {
-        history.push(name);
-      }
-
-      return 'interface';
-    }
-
-    if (objectType.objectFlags === ts.ObjectFlags.Reference) {
-      return 'array';
-    }
-  }
-
-  if (flags === ts.TypeFlags.Union) {
-    return 'union';
-  }
-
-  if (flags === ts.TypeFlags.Intersection) {
-    return 'intersection';
-  }
-
-  if (flags & ts.TypeFlags.EnumLike) {
-    return 'enum';
-  }
-
-  return 'unknown';
-}
-
 function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
 
@@ -144,32 +94,28 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   }
 
   if (flags === ts.TypeFlags.Object) {
-    let objectType: ts.ObjectType = type as ts.ObjectType;
+    const objectType: ts.ObjectType = type as ts.ObjectType;
+    const name = objectType.symbol.name;
 
-    if (objectType.objectFlags === ts.ObjectFlags.Interface ||
-      (objectType.objectFlags === ts.ObjectFlags.Anonymous && type.symbol.name === "__type")) {
-      const name = type.symbol.name;
-
-      if (predefined[name]) {
-        return ts.createObjectLiteral([
-          ts.createPropertyAssignment("type", ts.createLiteral(predefined[name]))
-        ]);
-      }
-
-      if (history && history.indexOf(name) !== -1) {
-        return ts.createObjectLiteral([
-          ts.createPropertyAssignment("type", ts.createLiteral("any"))
-        ]);
-      } else if (history && name !== "__type") {
-        history.push(name);
-      }
-
-      return parseInterface(type, tc, history, additional);
+    if (predefined[name]) {
+      return ts.createObjectLiteral([
+        ts.createPropertyAssignment("type", ts.createLiteral(predefined[name]))
+      ]);
+    }
+    
+    if((tc as ArrayTypeChecker).isArrayType(objectType)){
+      return parseArray(objectType as ts.TypeReference, tc);
     }
 
-    if (objectType.objectFlags === ts.ObjectFlags.Reference) {
-      return parseArray(type, tc);
+    if (history && history.indexOf(name) !== -1) {
+      return ts.createObjectLiteral([
+        ts.createPropertyAssignment("type", ts.createLiteral("any"))
+      ]);
+    } else if (history && (name !== "__type" && name !== "Array")) {
+      history.push(name);
     }
+
+    return parseInterface(type, tc, history, additional);
   }
 
   if (flags === ts.TypeFlags.Union) {
@@ -184,7 +130,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
     return parseEnum(type, tc);
   }
 
-  return ts.createObjectLiteral();
+  throw new Error("Unknown type");
 }
 
 function parsePrimitive(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
@@ -206,7 +152,13 @@ function parseEnum(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressio
   ]);
 }
 
-function parseArray(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseArray(type: ts.TypeReference, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+  if(type.typeArguments){
+    return ts.createObjectLiteral([
+      ts.createPropertyAssignment("type", ts.createLiteral("array")),
+      ts.createPropertyAssignment("items", parseType(type.typeArguments[0], tc))
+    ]);
+  }
   return ts.createObjectLiteral([
     ts.createPropertyAssignment("type", ts.createLiteral("array"))
   ]);

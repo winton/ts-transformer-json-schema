@@ -19,7 +19,7 @@ describe("Test json schema tranformer", () => {
 		});
 
 		it("Empty type", () => {
-			type IEmpty = { };
+			type IEmpty = {};
 
 			expect(schema<IEmpty>()).toStrictEqual({});
 		});
@@ -63,7 +63,7 @@ describe("Test json schema tranformer", () => {
 	describe("Array type tests", () => {
 
 		it("Array of primitives", () => {
-			expect(schema<number[]>()).toStrictEqual({ type: "array" });
+			expect(schema<number[]>()).toStrictEqual({ type: "array", items: { type: "number" } });
 		});
 
 		it("Array of interfaces", () => {
@@ -71,13 +71,7 @@ describe("Test json schema tranformer", () => {
 				bool: boolean;
 			}
 
-			expect(schema<number[]>()).toStrictEqual({ type: "array" });
-		});
-
-		it("Array of types", () => {
-			type TBool = { bool: boolean; }
-
-			expect(schema<number[]>()).toStrictEqual({ type: "array" });
+			expect(schema<IBool[]>()).toStrictEqual({ type: "array", items: { type: "object", props: { bool: { type: "boolean" } } } });
 		});
 
 		it("Interface with numbers array", () => {
@@ -85,7 +79,7 @@ describe("Test json schema tranformer", () => {
 				num_array: number[];
 			}
 
-			expect(schema<IArray>()).toStrictEqual({ type: 'object', props:{ num_array: { type: "array" } }});
+			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { num_array: { type: "array", items: { type: "number" } } } });
 		});
 
 		it("Interface with strings array", () => {
@@ -93,7 +87,7 @@ describe("Test json schema tranformer", () => {
 				str_array: string[];
 			}
 
-			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { str_array: { type: "array" } } });
+			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { str_array: { type: "array", items: { type: "string" } } } });
 		});
 
 		it("Interface with strings array using Array<T>", () => {
@@ -101,7 +95,7 @@ describe("Test json schema tranformer", () => {
 				any_array: Array<string>;
 			}
 
-			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { any_array: { type: "array" } } });
+			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { any_array: { type: "array",  items: { type: "string" } } } });
 		});
 
 		it("Interface with strings array using Array<T>", () => {
@@ -109,7 +103,7 @@ describe("Test json schema tranformer", () => {
 				mul_array: Array<string | number>;
 			}
 
-			expect(schema<IArrayMultipleTypes>()).toStrictEqual({ type: 'object', props: { mul_array: { type: "array" } }});
+			expect(schema<IArrayMultipleTypes>()).toStrictEqual({ type: 'object', props: { mul_array: { type: "array", items: [{type: "string"}, {type: "number"}] } } });
 		});
 	});
 
@@ -120,9 +114,11 @@ describe("Test json schema tranformer", () => {
 				union: any | string;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ type: 'object', props:{
-				union: { type: "any" }
-			}});
+			expect(schema<IUnion>()).toStrictEqual({
+				type: 'object', props: {
+					union: { type: "any" }
+				}
+			});
 		});
 
 		it("Interface with string or number", () => {
@@ -130,54 +126,62 @@ describe("Test json schema tranformer", () => {
 				union: string | number;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ type: 'object', props: {
-				union: [
-					{ type: "string" },
-					{ type: "number" }
-				]
-			}});
+			expect(schema<IUnion>()).toStrictEqual({
+				type: 'object', props: {
+					union: [
+						{ type: "string" },
+						{ type: "number" }
+					]
+				}
+			});
 		});
 
 		it("Interface with string, number or boolean", () => {
 			interface IUnion {
-				optional: string | number | boolean ;
+				optional: string | number | boolean;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ type: 'object', props:{
-				optional: [
-					{ type: "string" }, 
-					{ type: "number" }, 
-					{ type: "boolean" },
-					{ type: "boolean" }
-				]
-			}});
+			expect(schema<IUnion>()).toStrictEqual({
+				type: 'object', props: {
+					optional: [
+						{ type: "string" },
+						{ type: "number" },
+						{ type: "boolean" },
+						{ type: "boolean" }
+					]
+				}
+			});
 		});
 
 		it("Interface with string or boolean", () => {
 			interface IUnion {
-				optional: string | boolean ;
+				optional: string | boolean;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ type: 'object', props:{
-				optional: [
-					{ type: "string" }, 
-					{ type: "boolean" },
-					{ type: "boolean" }
-				]
-			}});
+			expect(schema<IUnion>()).toStrictEqual({
+				type: 'object', props: {
+					optional: [
+						{ type: "string" },
+						{ type: "boolean" },
+						{ type: "boolean" }
+					]
+				}
+			});
 		});
 
 		it("Interface with string or number[]", () => {
 			interface IUnion {
-				optional: string | number[] ;
+				optional: string | number[];
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ type: 'object', props:{
-				optional: [
-					{ type: "string" }, 
-					{ type: "array" }
-				]
-			}});
+			expect(schema<IUnion>()).toStrictEqual({
+				type: 'object', props: {
+					optional: [
+						{ type: "string" },
+						{ type: "array", items: { type: "number" } }
+					]
+				}
+			});
 		});
 	});
 
@@ -194,15 +198,19 @@ describe("Test json schema tranformer", () => {
 			}
 
 			interface IIntersection {
-				combined : IIntersectionPart1 & IIntersectionPart2;
+				combined: IIntersectionPart1 & IIntersectionPart2;
 			}
 
-			expect(schema<IIntersection>()).toStrictEqual({ type: 'object', props:{
-				combined: { type: 'object', props: {
-					part1: { type: "string" },
-					part2: { type: "number" }
-				}}
-			}});
+			expect(schema<IIntersection>()).toStrictEqual({
+				type: 'object', props: {
+					combined: {
+						type: 'object', props: {
+							part1: { type: "string" },
+							part2: { type: "number" }
+						}
+					}
+				}
+			});
 		});
 	});
 
@@ -219,9 +227,11 @@ describe("Test json schema tranformer", () => {
 				enum: UserGroup;
 			}
 
-			expect(schema<IEnumerable>()).toStrictEqual({ type: 'object', props:{
-				enum: { type: 'enum', values: ['admin', 'manager', 'employee'] }
-			}});
+			expect(schema<IEnumerable>()).toStrictEqual({
+				type: 'object', props: {
+					enum: { type: 'enum', values: ['admin', 'manager', 'employee'] }
+				}
+			});
 		});
 
 		it("Interface with enmerable default numbers", () => {
@@ -235,9 +245,11 @@ describe("Test json schema tranformer", () => {
 				enum_num: UserGroup;
 			}
 
-			expect(schema<IEnumerable>()).toStrictEqual({ type: 'object', props:{
-				enum_num: { type: 'enum', values: [0, 1, 2] }
-			}});
+			expect(schema<IEnumerable>()).toStrictEqual({
+				type: 'object', props: {
+					enum_num: { type: 'enum', values: [0, 1, 2] }
+				}
+			});
 		});
 
 		it("Interface with enmerable numbers", () => {
@@ -251,9 +263,11 @@ describe("Test json schema tranformer", () => {
 				enum_num: UserGroup;
 			}
 
-			expect(schema<IEnumerable>()).toStrictEqual({ type: 'object', props:{
-				enum_num: { type: 'enum', values: [1, 2, 5] }
-			}});
+			expect(schema<IEnumerable>()).toStrictEqual({
+				type: 'object', props: {
+					enum_num: { type: 'enum', values: [1, 2, 5] }
+				}
+			});
 		});
 
 		it("Interface with mixed enmerable", () => {
@@ -267,9 +281,11 @@ describe("Test json schema tranformer", () => {
 				enum_mixed: UserGroup;
 			}
 
-			expect(schema<IEnumerable>()).toStrictEqual({ type: 'object', props:{
-				enum_mixed: { type: 'enum', values: [1, 2, 'string'] }
-			}});
+			expect(schema<IEnumerable>()).toStrictEqual({
+				type: 'object', props: {
+					enum_mixed: { type: 'enum', values: [1, 2, 'string'] }
+				}
+			});
 		});
 	});
 
@@ -290,11 +306,13 @@ describe("Test json schema tranformer", () => {
 			expect(schema<IOuter>()).toStrictEqual({
 				type: "object",
 				props: {
-					neasted: { type: "object", props: { 
-						num: { type: 'number'},
-						str: { type: 'string'}
-					}},
-					num: { type: 'number'}
+					neasted: {
+						type: "object", props: {
+							num: { type: 'number' },
+							str: { type: 'string' }
+						}
+					},
+					num: { type: 'number' }
 				}
 			});
 		});
@@ -305,13 +323,17 @@ describe("Test json schema tranformer", () => {
 			interface N2 { n1: N1; }
 			interface N3 { n2: N2; }
 
-			expect(schema<N3>()).toStrictEqual({ type: "object", props: {
-					n2: { type: "object", props: { 
-						n1: { type: "object", props: {
-								x: { type: "number"}
+			expect(schema<N3>()).toStrictEqual({
+				type: "object", props: {
+					n2: {
+						type: "object", props: {
+							n1: {
+								type: "object", props: {
+									x: { type: "number" }
+								}
 							}
 						}
-					}}
+					}
 				}
 			});
 		});
@@ -330,11 +352,13 @@ describe("Test json schema tranformer", () => {
 				any: any;
 			}
 
-			expect(schema<IExtended>()).toStrictEqual({ type: 'object', props:{
-				num: { type: "number" },
-				str: { type: "string" },
-				any: { type: "any" }
-			}});
+			expect(schema<IExtended>()).toStrictEqual({
+				type: 'object', props: {
+					num: { type: "number" },
+					str: { type: "string" },
+					any: { type: "any" }
+				}
+			});
 		});
 
 		it("Interface extends interface and overrides", () => {
@@ -349,11 +373,13 @@ describe("Test json schema tranformer", () => {
 				str: any;
 			}
 
-			expect(schema<IOverrided>()).toStrictEqual({ type: 'object', props:{
-				num: { type: "number" },
-				str: { type: "any" },
-				any: { type: "any" }
-			}});
+			expect(schema<IOverrided>()).toStrictEqual({
+				type: 'object', props: {
+					num: { type: "number" },
+					str: { type: "any" },
+					any: { type: "any" }
+				}
+			});
 		});
 	});
 
@@ -370,15 +396,17 @@ describe("Test json schema tranformer", () => {
 				aBoolean: boolean[];
 			}
 
-			expect(schema<IBulk>()).toStrictEqual({ type: 'object', props:{
-				any: { type: "any" },
-				bool: { type: "boolean" },
-				num: { type: "number" },
-				str: { type: "string" },
-				aString: { type: "array" },
-				aNumber: { type: "array" },
-				aBoolean: { type: "array" }
-			}});
+			expect(schema<IBulk>()).toStrictEqual({
+				type: 'object', props: {
+					any: { type: "any" },
+					bool: { type: "boolean" },
+					num: { type: "number" },
+					str: { type: "string" },
+					aString: { type: "array", items: { type: "string" } },
+					aNumber: { type: "array", items: { type: "number" } },
+					aBoolean: { type: "array", items: { type: "boolean" } }
+				}
+			});
 		});
 
 	});
@@ -390,19 +418,23 @@ describe("Test json schema tranformer", () => {
 				optional?: any;
 			}
 
-			expect(schema<IOptional>()).toStrictEqual({ type: 'object', props:{
-				optional: { type: "any", optional: true }
-			}});
+			expect(schema<IOptional>()).toStrictEqual({
+				type: 'object', props: {
+					optional: { type: "any", optional: true }
+				}
+			});
 		});
 
 		it("Optional property union", () => {
 			interface IOptional {
-				readonly optional?: string | number ;
+				readonly optional?: string | number;
 			}
 
-			expect(schema<IOptional>()).toStrictEqual({ type: 'object', props:{
-				optional: [{ type: "string" }, { type: "number" }]
-			}});
+			expect(schema<IOptional>()).toStrictEqual({
+				type: 'object', props: {
+					optional: [{ type: "string" }, { type: "number" }]
+				}
+			});
 		});
 	});
 
@@ -422,10 +454,12 @@ describe("Test json schema tranformer", () => {
 				 */
 				num: number;
 			}
-			expect(schema<IBasic>()).toStrictEqual({ type: 'object', props:{
-				str: { type: "string", min: 1, max: 10 },
-				num: { type: "number", min: 5, max: 15 }
-			}});
+			expect(schema<IBasic>()).toStrictEqual({
+				type: 'object', props: {
+					str: { type: "string", min: 1, max: 10 },
+					num: { type: "number", min: 5, max: 15 }
+				}
+			});
 		});
 
 		it("Basic types with additional properties as boolean", () => {
@@ -442,10 +476,12 @@ describe("Test json schema tranformer", () => {
 				 */
 				num: number;
 			}
-			expect(schema<IBasic>()).toStrictEqual({ type: 'object', props:{
-				str: { type: "string", empty: false, numeric: true},
-				num: { type: "number", positive: true, convert: true }
-			}});
+			expect(schema<IBasic>()).toStrictEqual({
+				type: 'object', props: {
+					str: { type: "string", empty: false, numeric: true },
+					num: { type: "number", positive: true, convert: true }
+				}
+			});
 		});
 
 		it("Basic types with additional properties as regex", () => {
@@ -455,9 +491,11 @@ describe("Test json schema tranformer", () => {
 				 */
 				str: string;
 			}
-			expect(schema<IBasic>()).toStrictEqual({ type: 'object', props:{
-				str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$"},
-			}});
+			expect(schema<IBasic>()).toStrictEqual({
+				type: 'object', props: {
+					str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
+				}
+			});
 		});
 
 		it("Additional properties neasted", () => {
@@ -484,11 +522,11 @@ describe("Test json schema tranformer", () => {
 			}
 			expect(schema<IAdditional2>()).toStrictEqual({
 				type: "object",
-    			props: {
+				props: {
 					str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
 					additional: {
 						type: "object",
-						props:{
+						props: {
 							str: { type: "string", empty: false, numeric: true },
 							num: { type: "number", positive: true, convert: true }
 						}
@@ -521,11 +559,11 @@ describe("Test json schema tranformer", () => {
 			}
 			expect(schema<IAdditional2>(false)).toStrictEqual({
 				type: "object",
-    			props: {
+				props: {
 					str: { type: "string" },
 					additional: {
 						type: "object",
-						props:{
+						props: {
 							str: { type: "string" },
 							num: { type: "number" }
 						}
@@ -541,9 +579,11 @@ describe("Test json schema tranformer", () => {
 				 */
 				str: string;
 			}
-			expect(schema<IBasic>(false)).toStrictEqual({ type: 'object', props:{
-				str: { type: "string" },
-			}});
+			expect(schema<IBasic>(false)).toStrictEqual({
+				type: 'object', props: {
+					str: { type: "string" },
+				}
+			});
 		});
 
 		it("Additional properties on interface", () => {
@@ -553,17 +593,21 @@ describe("Test json schema tranformer", () => {
 			interface IBasic {
 				str: string;
 			}
-			expect(schema<IBasic>()).toStrictEqual({ type: 'object', props:{
-				str: { type: "string" }
-			}, $$strict: true});
+			expect(schema<IBasic>()).toStrictEqual({
+				type: 'object', props: {
+					str: { type: "string" }
+				}, $$strict: true
+			});
 		});
 
 		it("Additional properties from external file", () => {
 
-			expect(schema<IExternal>()).toStrictEqual({ type: 'object', props:{
-				str: { type: "string", empty: false, numeric: true},
-				num: { type: "number", positive: true, convert: true }
-			}, $$strict: true });
+			expect(schema<IExternal>()).toStrictEqual({
+				type: 'object', props: {
+					str: { type: "string", empty: false, numeric: true },
+					num: { type: "number", positive: true, convert: true }
+				}, $$strict: true
+			});
 		});
 	});
 
@@ -582,11 +626,12 @@ describe("Test json schema tranformer", () => {
 			expect(schema<IStep1>()).toStrictEqual({
 				type: "object",
 				props: {
-					step2: { 
+					step2: {
 						type: "object",
 						props: {
-							step1: { type: "any" } }
+							step1: { type: "any" }
 						}
+					}
 				}
 			});
 		});
