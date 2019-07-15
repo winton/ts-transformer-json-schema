@@ -95,7 +95,7 @@ describe("Test json schema tranformer", () => {
 				any_array: Array<string>;
 			}
 
-			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { any_array: { type: "array",  items: { type: "string" } } } });
+			expect(schema<IArray>()).toStrictEqual({ type: 'object', props: { any_array: { type: "array", items: { type: "string" } } } });
 		});
 
 		it("Interface with strings array using Array<T>", () => {
@@ -103,7 +103,7 @@ describe("Test json schema tranformer", () => {
 				mul_array: Array<string | number>;
 			}
 
-			expect(schema<IArrayMultipleTypes>()).toStrictEqual({ type: 'object', props: { mul_array: { type: "array", items: [{type: "string"}, {type: "number"}] } } });
+			expect(schema<IArrayMultipleTypes>()).toStrictEqual({ type: 'object', props: { mul_array: { type: "array", items: [{ type: "string" }, { type: "number" }] } } });
 		});
 	});
 
@@ -425,6 +425,18 @@ describe("Test json schema tranformer", () => {
 			});
 		});
 
+		it("Optional property string", () => {
+			interface IOptional {
+				optional?: string;
+			}
+
+			expect(schema<IOptional>()).toStrictEqual({
+				type: 'object', props: {
+					optional: { type: "string", optional: true }
+				}
+			});
+		});
+
 		it("Optional property union", () => {
 			interface IOptional {
 				readonly optional?: string | number;
@@ -731,6 +743,105 @@ describe("Test json schema tranformer", () => {
 					]
 				}
 			});
+		});
+	});
+
+	describe("Working with generic types", () => {
+
+		it("Basic generic type", () => {
+			interface IGeneric<T> {
+				generic: T;
+			}
+
+			expect(schema<IGeneric<string>>()).toStrictEqual({
+				type: 'object', props: {
+					generic: { type: "string" }
+				}
+			});
+		});
+
+		it("Generic union type", () => {
+			interface IGeneric<T> {
+				generic: T;
+			}
+
+			expect(schema<IGeneric<string | number>>()).toStrictEqual({
+				type: 'object', props: {
+					generic: [{ type: "string" }, { type: "number" }]
+				}
+			});
+		});
+
+		it("Neasted generic type", () => {
+			interface INested {
+				a: number
+			}
+
+			interface IGeneric<T> {
+				generic: T;
+			}
+
+			expect(schema<IGeneric<INested>>()).toStrictEqual({
+				type: 'object', props: {
+					generic: { type: "object", props: { a: { type: "number" } } }
+				}
+			});
+		});
+
+		it("Generic properties", () => {
+			interface ISomething {
+				[key: string]: string;
+			}
+
+			expect(schema<ISomething>()).toStrictEqual({});
+		});
+	});
+
+	describe("Working with types", () => {
+
+		it("Type", () => {
+			type IType = {
+				generic: string;
+			}
+
+			expect(schema<IType>()).toStrictEqual({
+				type: 'object', props: {
+					generic: { type: "string" }
+				}
+			});
+		});
+
+		it("Type with generic", () => {
+			type IGenericType<T> = {
+				generic: T;
+			}
+
+			expect(schema<IGenericType<string>>()).toStrictEqual({
+				type: 'object', props: {
+					generic: { type: "string" }
+				}
+			});
+		});
+
+		it("Complex type", () => {
+			type IComplexType =
+				{ email: string; password: string } |
+				{ email: string; oneTimeToken: string };
+
+			expect(schema<IComplexType>()).toStrictEqual([
+				{
+					type: 'object', props: {
+						email: { type: "string" },
+						password: { type: "string" }
+					}
+				},
+				{
+					type: 'object', props: {
+						email: { type: "string" },
+						oneTimeToken: { type: "string" }
+					}
+				}
+			]);
 		});
 	});
 
