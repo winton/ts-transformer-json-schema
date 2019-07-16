@@ -241,6 +241,15 @@ describe("Test json schema tranformer", () => {
 
 			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email" }, { type: "uuid" }] });
 		});
+
+		it("Union optional", () => {
+			// TODO: Check what should happend in this case
+			interface IUnion {
+				union?: IEmail | IUUID;
+			}
+
+			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email" }, { type: "uuid" }] });
+		});
 	});
 
 	describe("Intersection types tests", () => {
@@ -414,6 +423,126 @@ describe("Test json schema tranformer", () => {
 			type IAnonimous<T> = { num: T; str2: string } | { str1: string; str3: string };
 
 			expect(schema<IAnonimous<number>>()).toStrictEqual([{ str1: { type: "string" }, str3: { type: "string" } }, { num: { type: "number" }, str2: { type: "string" } }]);
+		});
+	});
+
+	describe("Infinite recursion test", () => {
+
+		it("Infinite recursion with 2 interfaces", () => {
+
+			interface IStep1 {
+				step2: IStep2;
+			}
+
+			interface IStep2 {
+				step1: IStep1;
+			}
+
+			expect(schema<IStep1>()).toStrictEqual({
+				step2: {
+					type: "object",
+					props: {
+						step1: { type: "any" }
+					}
+				}
+			});
+		});
+
+		it("Infinite recursion with 3 interfaces", () => {
+
+			interface IStep1 {
+				step2: IStep2;
+			}
+
+			interface IStep2 {
+				step3: IStep3;
+			}
+
+			interface IStep3 {
+				step1: IStep1;
+			}
+
+			expect(schema<IStep1>()).toStrictEqual({
+				step2: {
+					type: "object",
+					props: {
+						step3: {
+							type: "object",
+							props: {
+								step1: { type: "any" }
+							}
+						}
+					}
+				}
+			});
+		});
+	});
+
+	describe("Enumerable types test", () => {
+
+		it("Interface with enmerable strings", () => {
+			enum UserGroup {
+				Admin = 'admin',
+				Manager = 'manager',
+				Employee = 'employee'
+			}
+
+			interface IEnumerable {
+				enum: UserGroup;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum: { type: 'enum', values: ['admin', 'manager', 'employee'] }
+			});
+		});
+
+		it("Interface with enmerable default numbers", () => {
+			enum UserGroup {
+				Admin,
+				Manager,
+				Employee
+			}
+
+			interface IEnumerable {
+				enum_num: UserGroup;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+					enum_num: { type: 'enum', values: [0, 1, 2] }
+			});
+		});
+
+		it("Interface with mixed enmerable", () => {
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 'string'
+			}
+
+			interface IEnumerable {
+				enum_mixed: UserGroup;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+					enum_mixed: { type: 'enum', values: [1, 2, 'string'] }
+			});
+		});
+
+		it("Interface with optional enmerable", () => {
+			// TODO: Check what should happend in this case
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 'string'
+			}
+
+			interface IEnumerable {
+				enum_mixed?: UserGroup;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+					enum_mixed: [{ type: "UserGroup.Admin" }, { type: "UserGroup.Manager" }, { type: "UserGroup.Employee" }]
+			});
 		});
 	});
 
