@@ -239,9 +239,15 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
     });
   });
 
-  const properties_assignments = [];
-  properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
-  properties_assignments.push(ts.createPropertyAssignment("props", ts.createObjectLiteral(combined_properties)));
+
+  let properties_assignments = [];
+  if (depth > 1) {
+    properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
+    properties_assignments.push(ts.createPropertyAssignment("props", ts.createObjectLiteral(combined_properties)));
+  } else {
+    properties_assignments = combined_properties
+  }
+
   return ts.createObjectLiteral(properties_assignments);
 }
 

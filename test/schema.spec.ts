@@ -277,6 +277,22 @@ describe("Test json schema tranformer", () => {
 			});
 		});
 
+		it("Top-level intersection", () => {
+
+			interface IBase1 {
+				part1: string;
+			}
+
+			interface IBase2 {
+				part2: number;
+			}
+
+			expect(schema<IBase1 & IBase2>()).toStrictEqual({
+				part1: { type: "string" },
+				part2: { type: "number" }
+			});
+		});
+
 		it("Interface with primitive and interface", () => {
 			// TODO: in this case if there is strict annotation it should be ignored.
 
