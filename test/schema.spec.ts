@@ -58,7 +58,7 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
-	describe("Optional single type tests", () => {
+	describe("Optional type tests", () => {
 		it("Interface with optional string", () => {
 			interface IString {
 				str?: string;
@@ -89,6 +89,25 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IBool>()).toStrictEqual({ bool: { type: "boolean", optional: true } });
+		});
+
+		it("Interface with all optional", () => {
+			interface IOptional {
+				limit?: number;
+				offset?: number;
+			}
+
+			expect(schema<IOptional>()).toStrictEqual({ limit: { type: "number", optional: true }, offset: { type: "number", optional: true } });
+		});
+
+		it("Interface with many optional", () => {
+			interface IOptional {
+				limit?: number;
+				offset?: number;
+				x: number;
+			}
+
+			expect(schema<IOptional>()).toStrictEqual({ x: { type: "number" }, limit: { type: "number", optional: true }, offset: { type: "number", optional: true } });
 		});
 	});
 
@@ -183,7 +202,7 @@ describe("Test json schema tranformer", () => {
 
 	describe("Intersection types tests", () => {
 
-		it("Interface with intersection any and string", () => {
+		it("Basic intersection", () => {
 
 			interface IBase1 {
 				part1: string;
@@ -202,6 +221,71 @@ describe("Test json schema tranformer", () => {
 					type: 'object', props: {
 						part1: { type: "string" },
 						part2: { type: "number" }
+					}
+				}
+			});
+		});
+
+		it("Interface with primitive and interface", () => {
+			// TODO: in this case if there is strict annotation it should be ignored.
+
+			interface IBase1 {
+				part1: string;
+			}
+
+			interface IIntersection {
+				combined: IBase1 & string;
+			}
+
+			expect(schema<IIntersection>()).toStrictEqual({
+				combined: {
+					type: 'object', props: {
+						part1: { type: "string" }
+					}
+				}
+			});
+		});
+	});
+
+	describe("Neased types tests", () => {
+
+		it("Basic nested interfaces", () => {
+
+			interface IInner {
+				num: number;
+				str: string;
+			}
+
+			interface IOuter {
+				neasted: IInner;
+				num: number;
+			}
+
+			expect(schema<IOuter>()).toStrictEqual({
+				neasted: {
+					type: "object", props: {
+						num: { type: 'number' },
+						str: { type: 'string' }
+					}
+				},
+				num: { type: 'number' }
+			});
+		});
+
+		it("Tripple nested interfaces", () => {
+
+			interface N1 { x: number; }
+			interface N2 { n1: N1; }
+			interface N3 { n2: N2; }
+
+			expect(schema<N3>()).toStrictEqual({
+				n2: {
+					type: "object", props: {
+						n1: {
+							type: "object", props: {
+								x: { type: "number" }
+							}
+						}
 					}
 				}
 			});
@@ -247,6 +331,46 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IGeneric<string | number>>()).toStrictEqual({ generic: [{ type: "string" }, { type: "number" }] });
+		});
+
+		it("Generic interface type", () => {
+
+			interface IBase {
+				str: string;
+			}
+
+			interface IGeneric<T> {
+				generic: T;
+			}
+
+			expect(schema<IGeneric<IBase>>()).toStrictEqual({
+				generic: {
+					type: "object", props: {
+						str: { type: "string" }
+					}
+				}
+			});
+		});
+	});
+
+	describe("Anonimous type tests", () => {
+
+		it("Basic anonimous type", () => {
+			type IAnonimous = { str1: string; str2: string };
+
+			expect(schema<IAnonimous>()).toStrictEqual({ str1: { type: "string" }, str2: { type: "string" } });
+		});
+
+		it("Union anonimous type", () => {
+			type IAnonimous = { str1: string; str2: string } | { str1: string; str3: string };
+
+			expect(schema<IAnonimous>()).toStrictEqual([{ str1: { type: "string" }, str2: { type: "string" } }, { str1: { type: "string" }, str3: { type: "string" } }]);
+		});
+
+		it("Generic anonimous type", () => {
+			type IAnonimous<T> = { num: T; str2: string } | { str1: string; str3: string };
+
+			expect(schema<IAnonimous<number>>()).toStrictEqual([{ str1: { type: "string" }, str3: { type: "string" } }, { num: { type: "number" }, str2: { type: "string" } }]);
 		});
 	});
 
