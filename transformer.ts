@@ -77,7 +77,7 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
  */
 
 function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
-  additional?: boolean): ts.ObjectLiteralExpression {
+  additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
 
   const flags = type.flags;
 
@@ -119,7 +119,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
   }
 
   if (flags === ts.TypeFlags.Union) {
-    return parseUnion(type, tc, ++depth, history);
+    return parseUnion(type, tc, ++depth, history, additional, optional);
   }
 
   if (flags === ts.TypeFlags.Intersection) {
@@ -165,23 +165,23 @@ function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, h
 }
 
 function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
-  additional?: boolean): ts.ObjectLiteralExpression {
+  additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
   const union_type = type as ts.UnionOrIntersectionType;
 
   let firstBoolean = true;
   const types = union_type.types.filter(union_property => {
     if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
-      if(firstBoolean){
+      if (firstBoolean) {
         firstBoolean = false;
         return true;
-      }else{
+      } else {
         return false;
       }
     }
 
     if (tc.typeToString(union_property) !== 'undefined') {
       return true;
-    }else{
+    } else {
       return false;
     }
   });
@@ -207,7 +207,11 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
     return parseType(union_property, tc, depth, history, additional);
   });
 
-
+  if (optional) {
+    mapped_types.push(ts.createObjectLiteral([
+      ts.createPropertyAssignment("type", ts.createLiteral("forbidden"))
+    ]))
+  }
 
   return ts.createArrayLiteral(mapped_types) as unknown as ts.ObjectLiteralExpression;
 }
@@ -246,11 +250,12 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
   const properties_assignments = properties.map(property => {
-    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, depth, history, additional);
-
     const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
 
-    if (declaration.questionToken && parsed.properties) {
+    const optional = declaration.questionToken ? true : false;
+    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, depth, history, additional, optional);
+
+    if (optional && parsed.properties) {
       parsed = addProperty(parsed, "optional", true);
     }
 
