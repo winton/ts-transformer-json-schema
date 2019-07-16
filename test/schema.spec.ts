@@ -158,6 +158,49 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
+	describe("Array type tests", () => {
+
+		it("Array of strings", () => {
+			interface IString {
+				str: string[];
+			}
+
+			expect(schema<IString>()).toStrictEqual({ str: { type: "array", items: { type: "string" } } });
+		});
+
+		it("Array of any", () => {
+			interface IAny {
+				any: any[];
+			}
+
+			expect(schema<IAny>()).toStrictEqual({ any: { type: "array", items: { type: "any" } } });
+		});
+
+		it("Array of numbers", () => {
+			interface INumber {
+				num: number[];
+			}
+
+			expect(schema<INumber>()).toStrictEqual({ num: { type: "array", items: { type: "number" } } });
+		});
+
+		it("Array of booleans", () => {
+			interface IBool {
+				bool: boolean[];
+			}
+
+			expect(schema<IBool>()).toStrictEqual({ bool: { type: "array", items: { type: "boolean" } } });
+		});
+
+		it("Array defined with Array", () => {
+			interface IString {
+				array: Array<number>;
+			}
+
+			expect(schema<IString>()).toStrictEqual({ array: { type: "array", items: { type: "number" } } });
+		});
+	});
+
 	describe("Union type tests", () => {
 		it("Union string and any", () => {
 			interface IAny {
