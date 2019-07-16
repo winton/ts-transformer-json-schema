@@ -546,4 +546,44 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
+	describe("Extended types test", () => {
+
+		it("Interface extends interface", () => {
+
+			interface IExtendable {
+				num: number;
+				str: string;
+			}
+
+			interface IExtended extends IExtendable {
+				any: any;
+			}
+
+			expect(schema<IExtended>()).toStrictEqual({
+				num: { type: "number" },
+				str: { type: "string" },
+				any: { type: "any" }
+			});
+		});
+
+		it("Interface extends interface and overrides", () => {
+
+			interface IExtendable {
+				num: number;
+				str: string;
+			}
+
+			interface IOverrided extends IExtendable {
+				any: any;
+				str: any;
+			}
+
+			expect(schema<IOverrided>()).toStrictEqual({
+				num: { type: "number" },
+				str: { type: "any" },
+				any: { type: "any" }
+			});
+		});
+	});
+
 });
