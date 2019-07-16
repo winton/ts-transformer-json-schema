@@ -243,12 +243,11 @@ describe("Test json schema tranformer", () => {
 		});
 
 		it("Union optional", () => {
-			// TODO: Check what should happend in this case
 			interface IUnion {
 				union?: IEmail | IUUID;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email" }, { type: "uuid" }] });
+			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email" }, { type: "uuid" }, {type: "forbidden"}] });
 		});
 	});
 
@@ -529,7 +528,6 @@ describe("Test json schema tranformer", () => {
 		});
 
 		it("Interface with optional enmerable", () => {
-			// TODO: Check what should happend in this case
 			enum UserGroup {
 				Admin = 1,
 				Manager = 2,
@@ -541,7 +539,7 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IEnumerable>()).toStrictEqual({
-				enum_mixed: [{ type: "UserGroup.Admin" }, { type: "UserGroup.Manager" }, { type: "UserGroup.Employee" }]
+				enum_mixed: [{ type: "UserGroup.Admin" }, { type: "UserGroup.Manager" }, { type: "UserGroup.Employee" }, {type: "forbidden"}]
 			});
 		});
 	});
