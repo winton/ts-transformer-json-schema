@@ -56,7 +56,7 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
   }
 
   const type = typeChecker.getTypeFromTypeNode(node.typeArguments[0]);
-  return parseType(type, typeChecker, [], additional);
+  return parseType(type, typeChecker, 0, [], additional);
 }
 
 function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node is ts.CallExpression {
@@ -76,7 +76,7 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
  * PARSING LOGIC
  */
 
-function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
 
   const flags = type.flags;
@@ -85,8 +85,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
     flags & ts.TypeFlags.NumberLike ||
     flags & ts.TypeFlags.BooleanLike ||
     flags === ts.TypeFlags.Any) {
-    console.log("Primitive");
-    return parsePrimitive(type, tc);
+    return parsePrimitive(type, tc, ++depth);
   }
 
   if (flags === ts.TypeFlags.Null ||
@@ -99,19 +98,16 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
     const name = objectType.symbol.name;
 
     if (predefined[name]) {
-      console.log("Predefined");
       return ts.createObjectLiteral([
         ts.createPropertyAssignment("type", ts.createLiteral(predefined[name]))
       ]);
     }
 
     if ((tc as ArrayTypeChecker).isArrayType(objectType)) {
-      console.log("Array", name);
-      return parseArray(objectType as ts.TypeReference, tc);
+      return parseArray(objectType as ts.TypeReference, tc, ++depth);
     }
 
     if (history && history.indexOf(name) !== -1) {
-      console.log("Recursion");
       return ts.createObjectLiteral([
         ts.createPropertyAssignment("type", ts.createLiteral("any"))
       ]);
@@ -119,36 +115,32 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, history?: string[],
       history.push(name);
     }
 
-    console.log("Interface or Type", name);
-    return parseInterface(type, tc, history, additional);
+    return parseInterface(type, tc, ++depth, history, additional);
   }
 
   if (flags === ts.TypeFlags.Union) {
-    console.log("Union");
-    return parseUnion(type, tc, history);
+    return parseUnion(type, tc, ++depth, history);
   }
 
   if (flags === ts.TypeFlags.Intersection) {
-    console.log("Intersection");
-    return parseIntersection(type, tc, history);
+    return parseIntersection(type, tc, ++depth, history);
   }
 
   if (flags & ts.TypeFlags.EnumLike) {
-    console.log("Enum");
-    return parseEnum(type, tc);
+    return parseEnum(type, tc, ++depth);
   }
 
   throw new Error("Unknown type");
 }
 
-function parsePrimitive(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
   const type_string = tc.typeToString(type);
   return ts.createObjectLiteral([
     ts.createPropertyAssignment("type", ts.createLiteral(type_string))
   ]);
 }
 
-function parseEnum(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
   const enum_type = type as ts.UnionOrIntersectionType;
   const values = enum_type.types.map(enum_property => {
     return ts.createLiteral((enum_property as unknown as LiteralType).value);
@@ -160,11 +152,11 @@ function parseEnum(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpressio
   ]);
 }
 
-function parseArray(type: ts.TypeReference, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
+function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, history?: string[]): ts.ObjectLiteralExpression {
   if (type.typeArguments) {
     return ts.createObjectLiteral([
       ts.createPropertyAssignment("type", ts.createLiteral("array")),
-      ts.createPropertyAssignment("items", parseType(type.typeArguments[0], tc))
+      ts.createPropertyAssignment("items", parseType(type.typeArguments[0], tc, depth, history))
     ]);
   }
   return ts.createObjectLiteral([
@@ -172,7 +164,7 @@ function parseArray(type: ts.TypeReference, tc: ts.TypeChecker): ts.ObjectLitera
   ]);
 }
 
-function parseUnion(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
   const union_type = type as ts.UnionOrIntersectionType;
 
@@ -202,7 +194,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, history?: string[],
       ]);
     }
 
-    return parseType(union_property, tc, history, additional);
+    return parseType(union_property, tc, depth, history, additional);
   }
 
   const mapped_types = types.map(union_property => {
@@ -212,7 +204,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, history?: string[],
       ]);
     }
 
-    return parseType(union_property, tc, history, additional);
+    return parseType(union_property, tc, depth, history, additional);
   });
 
 
@@ -220,11 +212,11 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   return ts.createArrayLiteral(mapped_types) as unknown as ts.ObjectLiteralExpression;
 }
 
-function parseIntersection(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
   const intersection_type = type as ts.UnionOrIntersectionType;
   const types = intersection_type.types.map(intersection_property => {
-    return parseType(intersection_property, tc, history, additional);
+    return parseType(intersection_property, tc, depth, history, additional);
   });
 
   const combined_properties: ts.ObjectLiteralElementLike[] = [];
@@ -249,13 +241,12 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, history?: string[]
   return ts.createObjectLiteral(properties_assignments);
 }
 
-function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
+function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
-  const depth = history? history.length : 0;
 
   const properties_assignments = properties.map(property => {
-    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, history, additional);
+    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, depth, history, additional);
 
     const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
 
