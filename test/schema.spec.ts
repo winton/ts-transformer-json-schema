@@ -416,13 +416,13 @@ describe("Test json schema tranformer", () => {
 		it("Union anonimous type", () => {
 			type IAnonimous = { str1: string; str2: string } | { str1: string; str3: string };
 
-			expect(schema<IAnonimous>()).toStrictEqual([{ str1: { type: "string" }, str2: { type: "string" } }, { str1: { type: "string" }, str3: { type: "string" } }]);
+			expect(schema<IAnonimous>()).toStrictEqual([{ type: "object", props: { str1: { type: "string" }, str2: { type: "string" } } }, { type: "object", props: { str1: { type: "string" }, str3: { type: "string" } } }]);
 		});
 
 		it("Generic anonimous type", () => {
 			type IAnonimous<T> = { num: T; str2: string } | { str1: string; str3: string };
 
-			expect(schema<IAnonimous<number>>()).toStrictEqual([{ str1: { type: "string" }, str3: { type: "string" } }, { num: { type: "number" }, str2: { type: "string" } }]);
+			expect(schema<IAnonimous<number>>()).toStrictEqual([{ type: "object", props: { str1: { type: "string" }, str3: { type: "string" } } }, { type: "object", props: { num: { type: "number" }, str2: { type: "string" } } }]);
 		});
 	});
 
@@ -508,7 +508,7 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IEnumerable>()).toStrictEqual({
-					enum_num: { type: 'enum', values: [0, 1, 2] }
+				enum_num: { type: 'enum', values: [0, 1, 2] }
 			});
 		});
 
@@ -524,7 +524,7 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IEnumerable>()).toStrictEqual({
-					enum_mixed: { type: 'enum', values: [1, 2, 'string'] }
+				enum_mixed: { type: 'enum', values: [1, 2, 'string'] }
 			});
 		});
 
@@ -541,7 +541,7 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IEnumerable>()).toStrictEqual({
-					enum_mixed: [{ type: "UserGroup.Admin" }, { type: "UserGroup.Manager" }, { type: "UserGroup.Employee" }]
+				enum_mixed: [{ type: "UserGroup.Admin" }, { type: "UserGroup.Manager" }, { type: "UserGroup.Employee" }]
 			});
 		});
 	});
@@ -728,7 +728,7 @@ describe("Test json schema tranformer", () => {
 				str: string;
 			}
 			expect(schema<IBasic>()).toStrictEqual({
-				str: { type: "string" }, 
+				str: { type: "string" },
 				$$strict: true
 			});
 		});
@@ -736,7 +736,7 @@ describe("Test json schema tranformer", () => {
 		it("Additional properties from external file", () => {
 			expect(schema<IExternal>()).toStrictEqual({
 				str: { type: "string", empty: false, numeric: true },
-				num: { type: "number", positive: true, convert: true }, 
+				num: { type: "number", positive: true, convert: true },
 				$$strict: true
 			});
 		});
@@ -749,13 +749,13 @@ describe("Test json schema tranformer", () => {
 				str?: string;
 			}
 			expect(schema<IBasic>()).toStrictEqual({
-				str: { type: "string", optional: true }, 
+				str: { type: "string", optional: true },
 				$$strict: true
 			});
 		});
-		
+
 		it("Additional properties combined with optional", () => {
-			
+
 			interface IBasic {
 				/**
 				 * @empty false
