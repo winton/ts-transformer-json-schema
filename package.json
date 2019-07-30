@@ -30,14 +30,14 @@
   ],
   "homepage": "https://github.com/ipetrovic11/ts-transformer-json-schema",
   "devDependencies": {
-    "@types/jest": "^24.0.14",
-    "@types/node": "^10.3.5",
+    "@types/jest": "^24.0.16",
+    "@types/node": "^12.0.0",
     "fastest-validator": "^0.6.17",
     "jest": "^24.8.0",
     "jest-cli": "^24.8.0",
-    "tslint": "^5.17.0",
+    "tslint": "^5.18.0",
     "ttypescript": "^1.5.7",
-    "typescript": "^3.2.2"
+    "typescript": "^3.5.3"
   },
   "peerDependencies": {
     "typescript": ">=2.4.1"
