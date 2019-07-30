@@ -865,4 +865,17 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
+	describe("Index interface", () => {
+
+		it("Index interface nested", () => {
+			interface IIndex { 
+				index: {
+					[group: number]: string[] 
+				}
+			}
+
+			expect(schema<IIndex>()).toStrictEqual({ index: { type: "object" } } );
+		});
+	});
+
 });

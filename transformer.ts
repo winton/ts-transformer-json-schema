@@ -107,6 +107,12 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
       return parseArray(objectType as ts.TypeReference, tc, ++depth);
     }
 
+    if(tc.getIndexInfoOfType(type, ts.IndexKind.Number) || tc.getIndexInfoOfType(type, ts.IndexKind.String)){
+      return ts.createObjectLiteral([
+        ts.createPropertyAssignment("type", ts.createLiteral("object"))
+      ]);
+    }
+
     if (history && history.indexOf(name) !== -1) {
       return ts.createObjectLiteral([
         ts.createPropertyAssignment("type", ts.createLiteral("any"))

@@ -51,4 +51,63 @@ describe("Test validator directly with json schema transformer", () => {
 		});
 	});
 
+	describe("Index interface", () => {
+		it("Should succeed with object with string prop", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({index: {a: "string" }}, schema<IIndex>())).toBe(true);
+		});
+
+		it("Should succeed with object with number prop", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({index: {a: 1 }}, schema<IIndex>())).toBe(true);
+		});
+
+		it("Should succeed with object with object prop", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({index: {a: {} }}, schema<IIndex>())).toBe(true);
+		});
+
+		it("Should fail with null", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({index: null }, schema<IIndex>())).toBeInstanceOf(Array);
+		});
+
+		it("Should fail with string", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({index: "string"}, schema<IIndex>())).toBeInstanceOf(Array);
+		});
+
+		it("Should fail with array", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({index: [] }, schema<IIndex>())).toBeInstanceOf(Array);
+		});
+
+		it("Should fail without index prop", () => {
+			interface IIndex { 
+				index: { [group: string]: string[] }
+			}
+
+			expect(v.validate({a: {} }, schema<IIndex>())).toBeInstanceOf(Array);
+		});
+
+	});
+
 });
