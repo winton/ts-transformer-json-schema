@@ -197,6 +197,32 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
     return parseType(union_property, tc, depth, history, additional);
   }
 
+  /**
+   * If all types of union are literals, make an enum
+   */
+  let literals = types.length? true: false;
+  for (let union_property of types) {
+    if (!(union_property.flags & ts.TypeFlags.Literal)) {
+      literals = false;
+    }
+  }
+  if (literals) {
+    const values = types.map(union_property => {
+      if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
+        if(tc.typeToString(union_property) == 'false'){
+          return ts.createLiteral(false);
+        }else{
+          return ts.createLiteral(true);
+        }
+      }
+      return ts.createLiteral((union_property as unknown as LiteralType).value);
+    });
+    return ts.createObjectLiteral([
+      ts.createPropertyAssignment("type", ts.createLiteral("enum")),
+      ts.createPropertyAssignment("values", ts.createArrayLiteral(values))
+    ]);
+  }
+
   const mapped_types = types.map(union_property => {
     if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
       return ts.createObjectLiteral([

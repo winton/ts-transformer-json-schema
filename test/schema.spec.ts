@@ -555,7 +555,90 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IEnumerable>()).toStrictEqual({
-				enum_mixed: [{ type: "UserGroup.Admin" }, { type: "UserGroup.Manager" }, { type: "UserGroup.Employee" }, {type: "forbidden"}]
+				enum_mixed: {
+					"optional": true,
+					"type": "enum",
+					"values": [
+					  1,
+					  2,
+					  "string"
+					],
+				}
+			});
+		});
+
+		it("Interface with optional union of literals", () => {
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 'string'
+			}
+
+			interface IEnumerable {
+				enum_mixed?: UserGroup.Admin | UserGroup.Manager | UserGroup.Employee | 1;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum_mixed: {
+					"optional": true,
+					"type": "enum",
+					"values": [
+					  1,
+					  1,
+					  2,
+					  "string"
+					],
+				}
+			});
+		});
+
+		it("Interface with optional union of literals and false", () => {
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 'string'
+			}
+
+			interface IEnumerable {
+				enum_mixed?: UserGroup.Admin | UserGroup.Manager | UserGroup.Employee | false;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum_mixed: {
+					"optional": true,
+					"type": "enum",
+					"values": [
+					  false,
+					  1,
+					  2,
+					  "string"
+					],
+				}
+			});
+		});
+
+		it("Interface with optional union of literals and true", () => {
+			enum UserGroup {
+				Admin = 1,
+				Manager = 2,
+				Employee = 'string'
+			}
+
+			interface IEnumerable {
+				enum_mixed?: UserGroup.Admin | UserGroup.Manager | UserGroup.Employee | true;
+			}
+
+			expect(schema<IEnumerable>()).toStrictEqual({
+				enum_mixed: {
+					"optional": true,
+					"type": "enum",
+					"values": [
+					  true,
+					  1,
+					  2,
+					  "string"
+					],
+				}
 			});
 		});
 	});
