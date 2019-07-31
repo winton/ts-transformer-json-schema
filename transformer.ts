@@ -140,6 +140,17 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
 }
 
 function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
+
+  // Handle literal type
+  if(type.flags & ts.TypeFlags.Literal){
+    return ts.createObjectLiteral([
+      ts.createPropertyAssignment("type", ts.createLiteral("enum")),
+      ts.createPropertyAssignment("values", ts.createArrayLiteral([
+        ts.createLiteral((type as unknown as LiteralType).value)
+      ]))
+    ]);
+  }
+
   const type_string = tc.typeToString(type);
   return ts.createObjectLiteral([
     ts.createPropertyAssignment("type", ts.createLiteral(type_string))

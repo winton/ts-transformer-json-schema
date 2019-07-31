@@ -249,6 +249,28 @@ describe("Test json schema tranformer", () => {
 
 			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email" }, { type: "uuid" }, {type: "forbidden"}] });
 		});
+
+		it("Objects with literal string union", () => {
+			interface IUnion {
+				union:  { variant: "a", a: number } | { varijanta: "b", b: number }
+			}
+	
+			expect(schema<IUnion>()).toStrictEqual({ union: [
+				{ type: "object", props: {variant: {type: "enum", values: ["a"]}, a: {type: "number"}}},
+				{ type: "object", props: {variant: {type: "enum", values: ["b"]}, b: {type: "number"}}},
+			] });
+		});
+
+		it("Objects with literal number union", () => {
+			interface IUnion {
+				union:  { variant: 1, a: number } | { variant: 2, b: number }
+			}
+	
+			expect(schema<IUnion>()).toStrictEqual({ union: [
+				{ type: "object", props: {varijanta: {type: "enum", values: [1]}, a: {type: "number"}}},
+				{ type: "object", props: {varijanta: {type: "enum", values: [2]}, b: {type: "number"}}},
+			] });
+		});
 	});
 
 	describe("Intersection types tests", () => {
