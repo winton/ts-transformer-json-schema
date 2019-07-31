@@ -252,7 +252,7 @@ describe("Test json schema tranformer", () => {
 
 		it("Objects with literal string union", () => {
 			interface IUnion {
-				union:  { variant: "a", a: number } | { varijanta: "b", b: number }
+				union:  { variant: "a", a: number } | { variant: "b", b: number }
 			}
 	
 			expect(schema<IUnion>()).toStrictEqual({ union: [
@@ -267,8 +267,8 @@ describe("Test json schema tranformer", () => {
 			}
 	
 			expect(schema<IUnion>()).toStrictEqual({ union: [
-				{ type: "object", props: {varijanta: {type: "enum", values: [1]}, a: {type: "number"}}},
-				{ type: "object", props: {varijanta: {type: "enum", values: [2]}, b: {type: "number"}}},
+				{ type: "object", props: {variant: {type: "enum", values: [1]}, a: {type: "number"}}},
+				{ type: "object", props: {variant: {type: "enum", values: [2]}, b: {type: "number"}}},
 			] });
 		});
 	});
