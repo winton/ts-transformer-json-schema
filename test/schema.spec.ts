@@ -56,6 +56,18 @@ describe("Test json schema tranformer", () => {
 
 			expect(schema<IBool>()).toStrictEqual({ bool: { type: "boolean" } });
 		});
+
+		it("Interface with literal booleans", () => {
+			interface IBool {
+				boolT: true;
+				boolF: false;
+			}
+
+			expect(schema<IBool>()).toStrictEqual({ 
+				boolT: { type: "enum", values: [ true ] },
+				boolF: { type: "enum", values: [ false ] }
+	});
+		});
 	});
 
 	describe("Optional type tests", () => {

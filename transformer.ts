@@ -107,7 +107,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
       return parseArray(objectType as ts.TypeReference, tc, ++depth);
     }
 
-    if(tc.getIndexInfoOfType(type, ts.IndexKind.Number) || tc.getIndexInfoOfType(type, ts.IndexKind.String)){
+    if (tc.getIndexInfoOfType(type, ts.IndexKind.Number) || tc.getIndexInfoOfType(type, ts.IndexKind.String)) {
       return ts.createObjectLiteral([
         ts.createPropertyAssignment("type", ts.createLiteral("object"))
       ]);
@@ -142,7 +142,17 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
 function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
 
   // Handle literal type
-  if(type.flags & ts.TypeFlags.Literal){
+  if (type.flags & ts.TypeFlags.Literal) {
+
+    if (!type.hasOwnProperty('value') && type.hasOwnProperty('intrinsicName')) {
+      return ts.createObjectLiteral([
+        ts.createPropertyAssignment("type", ts.createLiteral("enum")),
+        ts.createPropertyAssignment("values", ts.createArrayLiteral([
+          ts.createLiteral((type as unknown as MaybeIntrinsicType).intrinsicName === "true" ? true : false)
+        ]))
+      ]);
+    }
+
     return ts.createObjectLiteral([
       ts.createPropertyAssignment("type", ts.createLiteral("enum")),
       ts.createPropertyAssignment("values", ts.createArrayLiteral([
@@ -217,7 +227,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
   /**
    * If all types of union are literals, make an enum
    */
-  let literals = types.length? true: false;
+  let literals = types.length ? true : false;
   for (let union_property of types) {
     if (!(union_property.flags & ts.TypeFlags.Literal)) {
       literals = false;
@@ -226,9 +236,9 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
   if (literals) {
     const values = types.map(union_property => {
       if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
-        if(tc.typeToString(union_property) == 'false'){
+        if (tc.typeToString(union_property) == 'false') {
           return ts.createLiteral(false);
-        }else{
+        } else {
           return ts.createLiteral(true);
         }
       }
