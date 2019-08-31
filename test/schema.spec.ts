@@ -525,6 +525,92 @@ describe("Test json schema tranformer", () => {
 				}
 			});
 		});
+
+		it("Recursion on different levels", () => {
+
+			interface INeasted {
+				bool: boolean;
+				boolT: true;
+				num: number;
+				num0: 0;
+			}
+
+			interface IBase1 {
+				type: string;
+				neasted: INeasted;
+			}
+
+			interface IBase2 {
+				id: number;
+				type: string;
+				neasted: INeasted;
+			}
+
+			type IAnyOf = IBase1 | IBase2;
+
+			interface ITest{
+				test: IAnyOf;
+			}
+
+			expect(schema<ITest>()).toStrictEqual({
+				test: [{
+                    type: "object",
+                    props: {
+                        type: {
+                            type: "string"
+                        },
+                        neasted: {
+                            type: "object",
+                            props: {
+                                bool: {
+                                    type: "boolean"
+                                },
+                                boolT: {
+                                    type: "enum",
+                                    values: [true]
+                                },
+                                num: {
+                                    type: "number"
+                                },
+                                num0: {
+                                    type: "enum",
+                                    values: [0]
+                                }
+                            }
+                        }
+                    }
+                }, {
+                    type: "object",
+                    props: {
+                        id: {
+                            type: "number"
+                        },
+                        type: {
+                            type: "string"
+                        },
+                        neasted: {
+                            type: "object",
+                            props: {
+                                bool: {
+                                    type: "boolean"
+                                },
+                                boolT: {
+                                    type: "enum",
+                                    values: [true]
+                                },
+                                num: {
+                                    type: "number"
+                                },
+                                num0: {
+                                    type: "enum",
+                                    values: [0]
+                                }
+                            }
+                        }
+                    }
+                }]
+			});
+		});
 	});
 
 	describe("Enumerable types test", () => {

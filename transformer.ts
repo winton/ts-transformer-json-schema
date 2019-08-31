@@ -121,7 +121,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
       history.push(name);
     }
 
-    return parseInterface(type, tc, ++depth, history, additional);
+    return parseInterface(type, tc, ++depth, history || [], additional);
   }
 
   if (flags === ts.TypeFlags.Union) {
@@ -304,7 +304,7 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
   return ts.createObjectLiteral(properties_assignments);
 }
 
-function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
+function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
@@ -323,10 +323,12 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
       parsed = addProperties(parsed, parseJSDoc(docs));
     }
 
+    history.pop();
     return ts.createPropertyAssignment(property.name, parsed);
   })
 
   if (properties_assignments.length === 0) {
+    history.pop();
     return ts.createObjectLiteral();
   }
 
@@ -346,6 +348,7 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
     });
   }
 
+  history.pop();
   return ts.createObjectLiteral(neasted_properties_assignments);
 
 }
