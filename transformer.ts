@@ -89,8 +89,11 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
   }
 
   if (flags === ts.TypeFlags.Null ||
-    flags === ts.TypeFlags.Undefined) {
-    return ts.createObjectLiteral();
+    flags === ts.TypeFlags.Undefined ||
+    flags === ts.TypeFlags.Never) {
+    return ts.createObjectLiteral([
+      ts.createPropertyAssignment("type", ts.createLiteral("forbidden"))
+    ]);
   }
 
   if (flags === ts.TypeFlags.Object) {

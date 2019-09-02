@@ -452,6 +452,39 @@ describe("Test json schema tranformer", () => {
 				}
 			});
 		});
+
+		it("Generic interface type null", () => {
+
+			interface IGeneric<F = null> {
+				forbidden: F;
+			}
+	
+			expect(schema<IGeneric>()).toStrictEqual({
+				forbidden: { type: "forbidden" }
+			});
+		});
+
+		it("Generic interface type undefined", () => {
+
+			interface IGeneric<F = undefined> {
+				forbidden: F;
+			}
+	
+			expect(schema<IGeneric>()).toStrictEqual({
+				forbidden: { type: "forbidden" }
+			});
+		});
+
+		it("Generic interface type never", () => {
+
+			interface IGeneric<F = never> {
+				forbidden: F;
+			}
+	
+			expect(schema<IGeneric>()).toStrictEqual({
+				forbidden: { type: "forbidden" }
+			});
+		});
 	});
 
 	describe("Anonimous type tests", () => {
