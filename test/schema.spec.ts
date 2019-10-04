@@ -1031,4 +1031,32 @@ describe("Test json schema tranformer", () => {
 		});
 	});
 
+	describe("Partial interface", () => {
+
+		it("Basic partial interface", () => {
+			interface IPartial { 
+				str: string;
+				num: number;
+			}
+
+			expect(schema<Partial<IPartial>>()).toStrictEqual({ str: {type: 'string', optional: true}, num: {type: 'number', optional: true} } );
+		});
+
+		it("Partial interface with enum", () => {
+			enum UserGroup {
+				Admin = 'admin',
+				Manager = 'manager',
+				Employee = 'employee'
+			}
+
+			interface IEnumerable {
+				enum: UserGroup;
+			}
+
+			expect(schema<Partial<IEnumerable>>()).toStrictEqual({
+				enum: { optional: true, type: 'enum', values: ['admin', 'manager', 'employee'] }
+			});
+		});
+	});
+
 });

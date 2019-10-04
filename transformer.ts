@@ -85,7 +85,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
     flags & ts.TypeFlags.NumberLike ||
     flags & ts.TypeFlags.BooleanLike ||
     flags === ts.TypeFlags.Any) {
-    return parsePrimitive(type, tc, ++depth);
+    return parsePrimitive(type, tc, ++depth, optional);
   }
 
   if (flags === ts.TypeFlags.Null ||
@@ -136,50 +136,57 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
   }
 
   if (flags & ts.TypeFlags.EnumLike) {
-    return parseEnum(type, tc, ++depth);
+    return parseEnum(type, tc, ++depth, optional);
   }
 
   throw new Error("Unknown type");
 }
 
-function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
+function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number, optional?: boolean): ts.ObjectLiteralExpression {
+
+  const props = [];
+  if (optional) {
+    props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
+  }
 
   // Handle literal type
   if (type.flags & ts.TypeFlags.Literal) {
 
     if (!type.hasOwnProperty('value') && type.hasOwnProperty('intrinsicName')) {
-      return ts.createObjectLiteral([
-        ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-        ts.createPropertyAssignment("values", ts.createArrayLiteral([
-          ts.createLiteral((type as unknown as MaybeIntrinsicType).intrinsicName === "true" ? true : false)
-        ]))
-      ]);
+      props.push(ts.createPropertyAssignment("type", ts.createLiteral("enum")));
+      props.push(ts.createPropertyAssignment("values", ts.createArrayLiteral([
+        ts.createLiteral((type as unknown as MaybeIntrinsicType).intrinsicName === "true" ? true : false)
+      ])));
+      return ts.createObjectLiteral(props);
     }
 
-    return ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-      ts.createPropertyAssignment("values", ts.createArrayLiteral([
-        ts.createLiteral((type as unknown as LiteralType).value)
-      ]))
-    ]);
+    props.push(ts.createPropertyAssignment("type", ts.createLiteral("enum")));
+    props.push(ts.createPropertyAssignment("values", ts.createArrayLiteral([
+      ts.createLiteral((type as unknown as LiteralType).value)
+    ])));
+    return ts.createObjectLiteral(props);
   }
 
   const type_string = tc.typeToString(type);
-  return ts.createObjectLiteral([
-    ts.createPropertyAssignment("type", ts.createLiteral(type_string))
-  ]);
+  props.push(ts.createPropertyAssignment("type", ts.createLiteral(type_string)));
+  return ts.createObjectLiteral(props);
 }
 
-function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
+function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number, optional?: boolean): ts.ObjectLiteralExpression {
   const enum_type = type as ts.UnionOrIntersectionType;
   const values = enum_type.types.map(enum_property => {
     return ts.createLiteral((enum_property as unknown as LiteralType).value);
   });
 
-  return ts.createObjectLiteral([
-    ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-    ts.createPropertyAssignment("values", ts.createArrayLiteral(values))
-  ]);
+  const props = [];
+  if (optional) {
+    props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
+  }
+
+  props.push(ts.createPropertyAssignment("type", ts.createLiteral("enum")));
+  props.push(ts.createPropertyAssignment("values", ts.createArrayLiteral(values)));
+
+  return ts.createObjectLiteral(props);
 }
 
 function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, history?: string[]): ts.ObjectLiteralExpression {
@@ -198,6 +205,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
   additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
   const union_type = type as ts.UnionOrIntersectionType;
 
+  let unionOptional = false;
   let firstBoolean = true;
   const types = union_type.types.filter(union_property => {
     if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
@@ -212,6 +220,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
     if (tc.typeToString(union_property) !== 'undefined') {
       return true;
     } else {
+      unionOptional = true;
       return false;
     }
   });
@@ -224,7 +233,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
       ]);
     }
 
-    return parseType(union_property, tc, depth, history, additional);
+    return parseType(union_property, tc, depth, history, additional, unionOptional || optional);
   }
 
   /**
@@ -247,10 +256,15 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
       }
       return ts.createLiteral((union_property as unknown as LiteralType).value);
     });
-    return ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-      ts.createPropertyAssignment("values", ts.createArrayLiteral(values))
-    ]);
+
+    const props = [];
+    if(optional || unionOptional){
+      props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
+    }
+    props.push(ts.createPropertyAssignment("type", ts.createLiteral("enum")));
+    props.push(ts.createPropertyAssignment("values", ts.createArrayLiteral(values)));
+
+    return ts.createObjectLiteral(props);
   }
 
   const mapped_types = types.map(union_property => {
@@ -260,7 +274,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
       ]);
     }
 
-    return parseType(union_property, tc, depth, history, additional);
+    return parseType(union_property, tc, depth, history, additional, unionOptional || optional);
   });
 
   if (optional) {
