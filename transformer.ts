@@ -228,6 +228,14 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
   if (types.length === 1) {
     const union_property = types[0];
     if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
+
+      if (optional || unionOptional) {
+        return ts.createObjectLiteral([
+          ts.createPropertyAssignment("type", ts.createLiteral("boolean")),
+          ts.createPropertyAssignment("optional", ts.createLiteral(true))
+        ]);
+      }
+
       return ts.createObjectLiteral([
         ts.createPropertyAssignment("type", ts.createLiteral("boolean"))
       ]);
@@ -277,7 +285,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
     return parseType(union_property, tc, depth, history, additional, unionOptional || optional);
   });
 
-  if (optional) {
+  if (optional || unionOptional) {
     mapped_types.push(ts.createObjectLiteral([
       ts.createPropertyAssignment("type", ts.createLiteral("forbidden"))
     ]))
@@ -294,7 +302,8 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
   });
 
   const combined_properties: ts.ObjectLiteralElementLike[] = [];
-  types.forEach(type => {
+  const unique: string[] = [];
+  types.reverse().forEach(type => {
     type.properties.forEach(property => {
       if (property.name) {
         const indentifier = property.name as ts.Identifier;
@@ -302,13 +311,16 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
           const assignment = property as ts.PropertyAssignment;
           const props = assignment.initializer as unknown as ts.ObjectLiteralExpressionBase<ts.PropertyAssignment>;
           props.properties.forEach(prop => {
-            combined_properties.push(prop)
+            const indentifier = prop.name as ts.Identifier;
+            if (!unique.includes(indentifier.escapedText.toString())) {
+              unique.push(indentifier.escapedText.toString());
+              combined_properties.push(prop)
+            }
           });
         }
       }
     });
   });
-
 
   let properties_assignments = [];
   if (depth > 1) {
@@ -319,10 +331,10 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
   }
 
   let docs: any[] = [];
-  if(type.symbol){
+  if (type.symbol) {
     docs = docs.concat(type.symbol.getJsDocTags());
   }
-  if(type.aliasSymbol){
+  if (type.aliasSymbol) {
     docs = docs.concat(type.aliasSymbol.getJsDocTags());
   }
   if (additional && docs.length) {
@@ -352,7 +364,7 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
     } else {
       parsed = parseType((property as any).type, tc, depth, history, additional, optional);
     }
-
+    
     if (optional && parsed.properties) {
       parsed = addProperty(parsed, "optional", true);
     }
@@ -381,10 +393,10 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
   }
 
   let docs: any[] = [];
-  if(type.symbol){
+  if (type.symbol) {
     docs = docs.concat(type.symbol.getJsDocTags());
   }
-  if(type.aliasSymbol){
+  if (type.aliasSymbol) {
     docs = docs.concat(type.aliasSymbol.getJsDocTags());
   }
   if (additional && docs.length) {
