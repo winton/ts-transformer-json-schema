@@ -132,7 +132,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
   }
 
   if (flags === ts.TypeFlags.Intersection) {
-    return parseIntersection(type, tc, ++depth, history);
+    return parseIntersection(type, tc, ++depth, history, additional);
   }
 
   if (flags & ts.TypeFlags.EnumLike) {
@@ -318,6 +318,19 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
     properties_assignments = combined_properties
   }
 
+  let docs: any[] = [];
+  if(type.symbol){
+    docs = docs.concat(type.symbol.getJsDocTags());
+  }
+  if(type.aliasSymbol){
+    docs = docs.concat(type.aliasSymbol.getJsDocTags());
+  }
+  if (additional && docs.length) {
+    parseJSDoc(docs).forEach(property => {
+      properties_assignments.push(property);
+    });
+  }
+
   return ts.createObjectLiteral(properties_assignments);
 }
 
@@ -367,7 +380,10 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
     neasted_properties_assignments = properties_assignments
   }
 
-  let docs = type.symbol.getJsDocTags();
+  let docs: any[] = [];
+  if(type.symbol){
+    docs = docs.concat(type.symbol.getJsDocTags());
+  }
   if(type.aliasSymbol){
     docs = docs.concat(type.aliasSymbol.getJsDocTags());
   }
