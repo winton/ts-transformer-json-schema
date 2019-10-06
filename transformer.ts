@@ -367,7 +367,10 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
     neasted_properties_assignments = properties_assignments
   }
 
-  const docs = type.symbol.getJsDocTags();
+  let docs = type.symbol.getJsDocTags();
+  if(type.aliasSymbol){
+    docs = docs.concat(type.aliasSymbol.getJsDocTags());
+  }
   if (additional && docs.length) {
     parseJSDoc(docs).forEach(property => {
       neasted_properties_assignments.push(property);

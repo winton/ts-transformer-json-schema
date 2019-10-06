@@ -983,6 +983,20 @@ describe("Test json schema tranformer", () => {
 			});
 		});
 
+		it("Additional properties on type", () => {
+			/**
+			 * @$$strict true
+			 */
+			type Basic = {
+				str: string;
+			}
+			expect(schema<Basic>()).toStrictEqual({
+				str: { type: "string" },
+				$$strict: true
+			});
+		});
+		
+
 		it("Additional properties from external file", () => {
 			expect(schema<IExternal>()).toStrictEqual({
 				str: { type: "string", empty: false, numeric: true },
