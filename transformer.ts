@@ -258,7 +258,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
     });
 
     const props = [];
-    if(optional || unionOptional){
+    if (optional || unionOptional) {
       props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
     }
     props.push(ts.createPropertyAssignment("type", ts.createLiteral("enum")));
@@ -323,13 +323,22 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
 
 function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
-  const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
+  const properties = tc.getPropertiesOfType(type).filter((property) => {
+    return (property.declarations && property.declarations!.length) || (property as any).type;
+  });
 
   const properties_assignments = properties.map(property => {
-    const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
+    let parsed;
+    let optional;
 
-    const optional = declaration.questionToken ? true : false;
-    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, depth, history, additional, optional);
+    if (property.declarations) {
+      const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
+
+      optional = declaration.questionToken ? true : false;
+      parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, depth, history, additional, optional);
+    } else {
+      parsed = parseType((property as any).type, tc, depth, history, additional, optional);
+    }
 
     if (optional && parsed.properties) {
       parsed = addProperty(parsed, "optional", true);

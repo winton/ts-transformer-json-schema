@@ -108,6 +108,64 @@ describe("Test validator directly with json schema transformer", () => {
 			expect(v.validate({a: {} }, schema<IIndex>())).toBeInstanceOf(Array);
 		});
 
+		it("Should succeed with valid index type prop", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]?: string | string[] ;
+			};
+
+			expect(v.validate({a: ['str', 'str'] }, schema<Query>())).toBe(true);
+		});
+
+		it("Should succeed with valid index type prop", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]?: string | string[] ;
+			};
+
+			expect(v.validate({a: 'str' }, schema<Query>())).toBe(true);
+		});
+
+		it("Should succeed without any prop", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]?: string | string[] ;
+			};
+
+			expect(v.validate({}, schema<Query>())).toBe(true);
+		});
+
+		it("Should fail with invalid index type prop", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]?: string | string[] ;
+			};
+
+			expect(v.validate({a: {} }, schema<Query>())).toBeInstanceOf(Array);
+		});
+
+
+
 	});
 
 });
