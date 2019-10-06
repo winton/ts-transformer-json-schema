@@ -1119,9 +1119,9 @@ describe("Test json schema tranformer", () => {
 			};
 
 			expect(schema<Query>()).toStrictEqual({ 
-				a: [{ optional: true, type: "string" }, { type: "array", items: { type: "string" } }], 
-				b: [{ optional: true, type: "string" }, { type: "array", items: { type: "string" } }], 
-				c: [{ optional: true, type: "string" }, { type: "array", items: { type: "string" } }],
+				a: [{ type: "string" }, { type: "array", items: { type: "string" } }, { type: 'forbidden'}], 
+				b: [{ type: "string" }, { type: "array", items: { type: "string" } }, { type: 'forbidden'}], 
+				c: [{ type: "string" }, { type: "array", items: { type: "string" } }, { type: 'forbidden'}],
 			});
 		});
 	});

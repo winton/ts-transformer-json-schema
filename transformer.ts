@@ -107,7 +107,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
     }
 
     if ((tc as ArrayTypeChecker).isArrayType(objectType)) {
-      return parseArray(objectType as ts.TypeReference, tc, ++depth);
+      return parseArray(objectType as ts.TypeReference, tc, ++depth, history, optional);
     }
 
     if (tc.getIndexInfoOfType(type, ts.IndexKind.Number) || tc.getIndexInfoOfType(type, ts.IndexKind.String)) {
@@ -189,16 +189,20 @@ function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number, optional?: 
   return ts.createObjectLiteral(props);
 }
 
-function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, history?: string[]): ts.ObjectLiteralExpression {
-  if (type.typeArguments) {
-    return ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("array")),
-      ts.createPropertyAssignment("items", parseType(type.typeArguments[0], tc, depth, history))
-    ]);
+function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, history?: string[], optional?: boolean): ts.ObjectLiteralExpression {
+
+  const props = [];
+  if (optional) {
+    props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
   }
-  return ts.createObjectLiteral([
-    ts.createPropertyAssignment("type", ts.createLiteral("array"))
-  ]);
+
+  if (type.typeArguments) {
+    props.push(ts.createPropertyAssignment("type", ts.createLiteral("array")));
+    props.push(ts.createPropertyAssignment("items", parseType(type.typeArguments[0], tc, depth, history)));
+  } else {
+    props.push(ts.createPropertyAssignment("type", ts.createLiteral("array")));
+  }
+  return ts.createObjectLiteral(props);
 }
 
 function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
@@ -282,7 +286,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
       ]);
     }
 
-    return parseType(union_property, tc, depth, history, additional, unionOptional || optional);
+    return parseType(union_property, tc, depth, history, additional);
   });
 
   if (optional || unionOptional) {
