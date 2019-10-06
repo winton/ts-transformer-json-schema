@@ -1029,6 +1029,52 @@ describe("Test json schema tranformer", () => {
 
 			expect(schema<IIndex>()).toStrictEqual({ index: { type: "object" } } );
 		});
+
+		it("Index type using enum", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]: string ;
+			};
+
+			expect(schema<Query>()).toStrictEqual({ a: { type: "string" }, b: { type: "string" }, c: { type: "string" } } );
+		});
+
+		it("Index type using enum and optional", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]?: string ;
+			};
+
+			expect(schema<Query>()).toStrictEqual({ a: { type: "string", optional: true }, b: { type: "string", optional: true }, c: { type: "string", optional: true } } );
+		});
+
+		it("Index type using enum, multiple values and optional", () => {
+			enum Enumerable {
+				a = 'a',
+				b = 'b',
+				c = 'c',
+			}
+
+			type Query = {
+				[type in Enumerable]?: string | string[] ;
+			};
+
+			expect(schema<Query>()).toStrictEqual({ 
+				a: [{ optional: true, type: "string" }, { type: "array", items: { type: "string" } }], 
+				b: [{ optional: true, type: "string" }, { type: "array", items: { type: "string" } }], 
+				c: [{ optional: true, type: "string" }, { type: "array", items: { type: "string" } }],
+			});
+		});
 	});
 
 	describe("Partial interface", () => {
