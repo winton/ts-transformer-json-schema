@@ -995,6 +995,45 @@ describe("Test json schema tranformer", () => {
 				$$strict: true
 			});
 		});
+
+		it("Additional properties on index type", () => {
+			
+			enum Enumerable {
+				str = 'str'
+			}
+
+			/**
+			 * @$$strict true
+			 */
+			type Query = {
+				[type in Enumerable]: string ;
+			};
+			expect(schema<Query>()).toStrictEqual({
+				str: { type: "string" },
+				$$strict: true
+			});
+		});
+
+		it("Additional properties on index type", () => {
+			
+			enum Enumerable {
+				str = 'str'
+			}
+
+			/**
+			 * @$$strict true
+			 */
+			type Query = {
+				[type in Enumerable]: string ;
+			} & {
+				str2: string;
+			}
+			expect(schema<Query>()).toStrictEqual({
+				str: { type: "string" },
+				str2: { type: "string" },
+				$$strict: true
+			});
+		});
 		
 
 		it("Additional properties from external file", () => {
