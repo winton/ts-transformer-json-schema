@@ -124,7 +124,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
       history.push(name);
     }
 
-    return parseInterface(type, tc, ++depth, history || [], additional);
+    return parseInterface(type, tc, ++depth, history || [], additional, optional);
   }
 
   if (flags === ts.TypeFlags.Union) {
@@ -351,7 +351,8 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
 }
 
 function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history: string[],
-  additional?: boolean): ts.ObjectLiteralExpression {
+  additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
+  
   const properties = tc.getPropertiesOfType(type).filter((property) => {
     return (property.declarations && property.declarations!.length) || (property as any).type;
   });
@@ -408,6 +409,11 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
       neasted_properties_assignments.push(property);
     });
   }
+
+  if (optional) {
+    neasted_properties_assignments.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
+  }
+
 
   history.pop();
   return ts.createObjectLiteral(neasted_properties_assignments);

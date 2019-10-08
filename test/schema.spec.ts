@@ -1152,6 +1152,23 @@ describe("Test json schema tranformer", () => {
 				enum: { optional: true, type: 'enum', values: ['admin', 'manager', 'employee'] }
 			});
 		});
+
+		it("Basic partial interface", () => {
+			interface INeasted {
+				boolena: boolean;
+				str?: string;
+			}
+			
+			interface IBase {
+				str: string;
+				status: INeasted;
+			}
+
+			expect(schema<Partial<IBase>>()).toStrictEqual({ 
+				str: {type: 'string', optional: true}, 
+				status: { type: "object", props: { boolena: { type: "boolean" }, str: { optional: true, type: "string" } }, optional: true }
+			});
+		});
 	});
 
 });
