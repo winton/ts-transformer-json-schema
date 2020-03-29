@@ -32,7 +32,7 @@
   "devDependencies": {
     "@types/jest": "^24.0.16",
     "@types/node": "^12.0.0",
-    "fastest-validator": "^0.6.17",
+    "fastest-validator": "^1.1.0",
     "jest": "^24.8.0",
     "jest-cli": "^24.8.0",
     "tslint": "^5.18.0",

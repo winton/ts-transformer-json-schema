@@ -279,7 +279,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
     return ts.createObjectLiteral(props);
   }
 
-  const mapped_types = types.map(union_property => {
+  let mapped_types = types.map(union_property => {
     if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
       return ts.createObjectLiteral([
         ts.createPropertyAssignment("type", ts.createLiteral("boolean"))
@@ -290,9 +290,12 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
   });
 
   if (optional || unionOptional) {
-    mapped_types.push(ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("forbidden"))
-    ]))
+    mapped_types = mapped_types.map(type => {
+      return addProperty(type, 'optional', true);
+    })
+    // mapped_types.push(ts.createObjectLiteral([
+    //   ts.createPropertyAssignment("type", ts.createLiteral("forbidden"))
+    // ]))
   }
 
   return ts.createArrayLiteral(mapped_types) as unknown as ts.ObjectLiteralExpression;
@@ -352,7 +355,7 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
 
 function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history: string[],
   additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
-  
+
   const properties = tc.getPropertiesOfType(type).filter((property) => {
     return (property.declarations && property.declarations!.length) || (property as any).type;
   });
@@ -369,7 +372,7 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
     } else {
       parsed = parseType((property as any).type, tc, depth, history, additional, optional);
     }
-    
+
     if (optional && parsed.properties) {
       parsed = addProperty(parsed, "optional", true);
     }

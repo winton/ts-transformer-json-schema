@@ -63,10 +63,10 @@ describe("Test json schema tranformer", () => {
 				boolF: false;
 			}
 
-			expect(schema<IBool>()).toStrictEqual({ 
-				boolT: { type: "enum", values: [ true ] },
-				boolF: { type: "enum", values: [ false ] }
-	});
+			expect(schema<IBool>()).toStrictEqual({
+				boolT: { type: "enum", values: [true] },
+				boolF: { type: "enum", values: [false] }
+			});
 		});
 	});
 
@@ -259,29 +259,33 @@ describe("Test json schema tranformer", () => {
 				union?: IEmail | IUUID;
 			}
 
-			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email" }, { type: "uuid" }, {type: "forbidden"}] });
+			expect(schema<IUnion>()).toStrictEqual({ union: [{ type: "email", optional: true }, { type: "uuid", optional: true }] });
 		});
 
 		it("Objects with literal string union", () => {
 			interface IUnion {
-				union:  { variant: "a", a: number } | { variant: "b", b: number }
+				union: { variant: "a", a: number } | { variant: "b", b: number }
 			}
-	
-			expect(schema<IUnion>()).toStrictEqual({ union: [
-				{ type: "object", props: {variant: {type: "enum", values: ["a"]}, a: {type: "number"}}},
-				{ type: "object", props: {variant: {type: "enum", values: ["b"]}, b: {type: "number"}}},
-			] });
+
+			expect(schema<IUnion>()).toStrictEqual({
+				union: [
+					{ type: "object", props: { variant: { type: "enum", values: ["a"] }, a: { type: "number" } } },
+					{ type: "object", props: { variant: { type: "enum", values: ["b"] }, b: { type: "number" } } },
+				]
+			});
 		});
 
 		it("Objects with literal number union", () => {
 			interface IUnion {
-				union:  { variant: 1, a: number } | { variant: 2, b: number }
+				union: { variant: 1, a: number } | { variant: 2, b: number }
 			}
-	
-			expect(schema<IUnion>()).toStrictEqual({ union: [
-				{ type: "object", props: {variant: {type: "enum", values: [1]}, a: {type: "number"}}},
-				{ type: "object", props: {variant: {type: "enum", values: [2]}, b: {type: "number"}}},
-			] });
+
+			expect(schema<IUnion>()).toStrictEqual({
+				union: [
+					{ type: "object", props: { variant: { type: "enum", values: [1] }, a: { type: "number" } } },
+					{ type: "object", props: { variant: { type: "enum", values: [2] }, b: { type: "number" } } },
+				]
+			});
 		});
 	});
 
@@ -458,7 +462,7 @@ describe("Test json schema tranformer", () => {
 			interface IGeneric<F = null> {
 				forbidden: F;
 			}
-	
+
 			expect(schema<IGeneric>()).toStrictEqual({
 				forbidden: { type: "forbidden" }
 			});
@@ -469,7 +473,7 @@ describe("Test json schema tranformer", () => {
 			interface IGeneric<F = undefined> {
 				forbidden: F;
 			}
-	
+
 			expect(schema<IGeneric>()).toStrictEqual({
 				forbidden: { type: "forbidden" }
 			});
@@ -480,7 +484,7 @@ describe("Test json schema tranformer", () => {
 			interface IGeneric<F = never> {
 				forbidden: F;
 			}
-	
+
 			expect(schema<IGeneric>()).toStrictEqual({
 				forbidden: { type: "forbidden" }
 			});
@@ -581,67 +585,67 @@ describe("Test json schema tranformer", () => {
 
 			type IAnyOf = IBase1 | IBase2;
 
-			interface ITest{
+			interface ITest {
 				test: IAnyOf;
 			}
 
 			expect(schema<ITest>()).toStrictEqual({
 				test: [{
-                    type: "object",
-                    props: {
-                        type: {
-                            type: "string"
-                        },
-                        neasted: {
-                            type: "object",
-                            props: {
-                                bool: {
-                                    type: "boolean"
-                                },
-                                boolT: {
-                                    type: "enum",
-                                    values: [true]
-                                },
-                                num: {
-                                    type: "number"
-                                },
-                                num0: {
-                                    type: "enum",
-                                    values: [0]
-                                }
-                            }
-                        }
-                    }
-                }, {
-                    type: "object",
-                    props: {
-                        id: {
-                            type: "number"
-                        },
-                        type: {
-                            type: "string"
-                        },
-                        neasted: {
-                            type: "object",
-                            props: {
-                                bool: {
-                                    type: "boolean"
-                                },
-                                boolT: {
-                                    type: "enum",
-                                    values: [true]
-                                },
-                                num: {
-                                    type: "number"
-                                },
-                                num0: {
-                                    type: "enum",
-                                    values: [0]
-                                }
-                            }
-                        }
-                    }
-                }]
+					type: "object",
+					props: {
+						type: {
+							type: "string"
+						},
+						neasted: {
+							type: "object",
+							props: {
+								bool: {
+									type: "boolean"
+								},
+								boolT: {
+									type: "enum",
+									values: [true]
+								},
+								num: {
+									type: "number"
+								},
+								num0: {
+									type: "enum",
+									values: [0]
+								}
+							}
+						}
+					}
+				}, {
+					type: "object",
+					props: {
+						id: {
+							type: "number"
+						},
+						type: {
+							type: "string"
+						},
+						neasted: {
+							type: "object",
+							props: {
+								bool: {
+									type: "boolean"
+								},
+								boolT: {
+									type: "enum",
+									values: [true]
+								},
+								num: {
+									type: "number"
+								},
+								num0: {
+									type: "enum",
+									values: [0]
+								}
+							}
+						}
+					}
+				}]
 			});
 		});
 	});
@@ -712,9 +716,9 @@ describe("Test json schema tranformer", () => {
 					"optional": true,
 					"type": "enum",
 					"values": [
-					  1,
-					  2,
-					  "string"
+						1,
+						2,
+						"string"
 					],
 				}
 			});
@@ -736,10 +740,10 @@ describe("Test json schema tranformer", () => {
 					"optional": true,
 					"type": "enum",
 					"values": [
-					  1,
-					  1,
-					  2,
-					  "string"
+						1,
+						1,
+						2,
+						"string"
 					],
 				}
 			});
@@ -761,10 +765,10 @@ describe("Test json schema tranformer", () => {
 					"optional": true,
 					"type": "enum",
 					"values": [
-					  false,
-					  1,
-					  2,
-					  "string"
+						false,
+						1,
+						2,
+						"string"
 					],
 				}
 			});
@@ -786,10 +790,10 @@ describe("Test json schema tranformer", () => {
 					"optional": true,
 					"type": "enum",
 					"values": [
-					  true,
-					  1,
-					  2,
-					  "string"
+						true,
+						1,
+						2,
+						"string"
 					],
 				}
 			});
@@ -997,7 +1001,7 @@ describe("Test json schema tranformer", () => {
 		});
 
 		it("Additional properties on index type", () => {
-			
+
 			enum Enumerable {
 				str = 'str'
 			}
@@ -1006,7 +1010,7 @@ describe("Test json schema tranformer", () => {
 			 * @$$strict true
 			 */
 			type Query = {
-				[type in Enumerable]: string ;
+				[type in Enumerable]: string;
 			};
 			expect(schema<Query>()).toStrictEqual({
 				str: { type: "string" },
@@ -1024,13 +1028,13 @@ describe("Test json schema tranformer", () => {
 			} & {
 				str2: string;
 			}
-	
+
 			expect(schema<Query>()).toStrictEqual({
 				str: { type: "string" },
 				str2: { type: "string" },
 				$$strict: true
 			});
-		});		
+		});
 
 		it("Additional properties from external file", () => {
 			expect(schema<IExternal>()).toStrictEqual({
@@ -1070,13 +1074,13 @@ describe("Test json schema tranformer", () => {
 	describe("Index interface", () => {
 
 		it("Index interface nested", () => {
-			interface IIndex { 
+			interface IIndex {
 				index: {
-					[group: number]: string[] 
+					[group: number]: string[]
 				}
 			}
 
-			expect(schema<IIndex>()).toStrictEqual({ index: { type: "object" } } );
+			expect(schema<IIndex>()).toStrictEqual({ index: { type: "object" } });
 		});
 
 		it("Index type using enum", () => {
@@ -1087,10 +1091,10 @@ describe("Test json schema tranformer", () => {
 			}
 
 			type Query = {
-				[type in Enumerable]: string ;
+				[type in Enumerable]: string;
 			};
 
-			expect(schema<Query>()).toStrictEqual({ a: { type: "string" }, b: { type: "string" }, c: { type: "string" } } );
+			expect(schema<Query>()).toStrictEqual({ a: { type: "string" }, b: { type: "string" }, c: { type: "string" } });
 		});
 
 		it("Index type using enum and optional", () => {
@@ -1101,10 +1105,10 @@ describe("Test json schema tranformer", () => {
 			}
 
 			type Query = {
-				[type in Enumerable]?: string ;
+				[type in Enumerable]?: string;
 			};
 
-			expect(schema<Query>()).toStrictEqual({ a: { type: "string", optional: true }, b: { type: "string", optional: true }, c: { type: "string", optional: true } } );
+			expect(schema<Query>()).toStrictEqual({ a: { type: "string", optional: true }, b: { type: "string", optional: true }, c: { type: "string", optional: true } });
 		});
 
 		it("Index type using enum, multiple values and optional", () => {
@@ -1115,13 +1119,13 @@ describe("Test json schema tranformer", () => {
 			}
 
 			type Query = {
-				[type in Enumerable]?: string | string[] ;
+				[type in Enumerable]?: string | string[];
 			};
 
-			expect(schema<Query>()).toStrictEqual({ 
-				a: [{ type: "string" }, { type: "array", items: { type: "string" } }, { type: 'forbidden'}], 
-				b: [{ type: "string" }, { type: "array", items: { type: "string" } }, { type: 'forbidden'}], 
-				c: [{ type: "string" }, { type: "array", items: { type: "string" } }, { type: 'forbidden'}],
+			expect(schema<Query>()).toStrictEqual({
+				a: [{ type: "string", optional: true }, { type: "array", optional: true, items: { type: "string" } }],
+				b: [{ type: "string", optional: true }, { type: "array", optional: true, items: { type: "string" } }],
+				c: [{ type: "string", optional: true }, { type: "array", optional: true, items: { type: "string" } }],
 			});
 		});
 	});
@@ -1129,12 +1133,12 @@ describe("Test json schema tranformer", () => {
 	describe("Partial interface", () => {
 
 		it("Basic partial interface", () => {
-			interface IPartial { 
+			interface IPartial {
 				str: string;
 				num: number;
 			}
 
-			expect(schema<Partial<IPartial>>()).toStrictEqual({ str: {type: 'string', optional: true}, num: {type: 'number', optional: true} } );
+			expect(schema<Partial<IPartial>>()).toStrictEqual({ str: { type: 'string', optional: true }, num: { type: 'number', optional: true } });
 		});
 
 		it("Partial interface with enum", () => {
@@ -1158,14 +1162,14 @@ describe("Test json schema tranformer", () => {
 				boolena: boolean;
 				str?: string;
 			}
-			
+
 			interface IBase {
 				str: string;
 				status: INeasted;
 			}
 
-			expect(schema<Partial<IBase>>()).toStrictEqual({ 
-				str: {type: 'string', optional: true}, 
+			expect(schema<Partial<IBase>>()).toStrictEqual({
+				str: { type: 'string', optional: true },
 				status: { type: "object", props: { boolena: { type: "boolean" }, str: { optional: true, type: "string" } }, optional: true }
 			});
 		});
