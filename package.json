@@ -1,6 +1,6 @@
 {
   "name": "ts-transformer-json-schema",
-  "version": "0.6.12",
+  "version": "1.1.0",
   "description": "A TypeScript custom transformer to obtain JSON schema from interface.",
   "main": "index.js",
   "scripts": {
