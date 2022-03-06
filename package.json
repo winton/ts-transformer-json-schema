@@ -1,5 +1,5 @@
 {
-  "name": "ts-transformer-json-schema",
+  "name": "@winton/ts-transformer-json-schema",
   "version": "1.1.0",
   "description": "A TypeScript custom transformer to obtain JSON schema from interface.",
   "main": "index.js",

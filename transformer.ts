@@ -33,13 +33,22 @@ export default function transformer(program: ts.Program): ts.TransformerFactory<
 function visitNodeAndChildren(node: ts.SourceFile, program: ts.Program, context: ts.TransformationContext): ts.SourceFile;
 function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node;
 
-function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node {
+function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node | undefined {
   return ts.visitEachChild(visitNode(node, program), (childNode) =>
     visitNodeAndChildren(childNode, program, context), context);
 }
 
-function visitNode(node: ts.Node, program: ts.Program): ts.Node {
+function visitNode(node: ts.Node, program: ts.Program): ts.Node | undefined {
   const typeChecker = program.getTypeChecker();
+
+  if (ts.isImportDeclaration(node)) {
+    const rawSpec = node.moduleSpecifier.getText();
+    const spec = rawSpec.substring(1, rawSpec.length - 1);
+
+    if (spec.includes("ts-transformer-json-schema")) {
+      return
+    }
+}
 
   if (!isKeysCallExpression(node, typeChecker)) {
     return node;
