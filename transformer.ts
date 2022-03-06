@@ -42,17 +42,20 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node | undefined {
   const typeChecker = program.getTypeChecker();
 
   if (ts.isImportDeclaration(node)) {
-    const rawSpec = node.moduleSpecifier.getText();
-    const spec = rawSpec.substring(1, rawSpec.length - 1);
+    try {
+      const rawSpec = node.moduleSpecifier.getText();
+      const spec = rawSpec.substring(1, rawSpec.length - 1);
 
-    if (spec.includes("ts-transformer-json-schema")) {
-      return
-    }
+      if (spec.includes("ts-transformer-json-schema")) {
+        return
+      }
+    } catch (e) {}
 }
 
   if (!isKeysCallExpression(node, typeChecker)) {
     return node;
   }
+  
   if (!node.typeArguments) {
     return ts.createObjectLiteral();
   }
