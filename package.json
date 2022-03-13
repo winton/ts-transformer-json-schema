@@ -40,6 +40,7 @@
     "typescript": "^3.5.3"
   },
   "peerDependencies": {
-    "typescript": ">=2.4.1"
+    "typescript": ">=2.4.1",
+    "fastest-validator": ">=1.12.0"
   }
 }
